@@ -21,7 +21,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "Tubers.LedBanner.LedLight"
+        applicationId = "tubers.ledbanner.ledlight"   // Play requires lowercase; code package (namespace) stays as is
         minSdk = 26          // Android 8.0+
         targetSdk = 36       // required by Google Play since Aug 31, 2026
         versionCode = 1

@@ -1,6 +1,6 @@
 # LED Banner (Android)
 
-Package: `Tubers.LedBanner.LedLight` · Kotlin · minSdk 26 · targetSdk 36 · Play Billing 9.1
+Package (applicationId): `tubers.ledbanner.ledlight` (code package `Tubers.LedBanner.LedLight`) · Kotlin · minSdk 26 · targetSdk 36 · Play Billing 9.1
 
 ## Project layout
 ```
