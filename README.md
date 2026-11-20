@@ -39,7 +39,7 @@ Every build copies its output to your Desktop automatically:
 ```properties
 storeFile=keystore/ledbanner-upload.jks
 storePassword=...
-keyAlias=upload
+keyAlias=ledbanner-upload
 keyPassword=...
 ```
 Keep the upload key in `keystore/ledbanner-upload.jks`, with its details in `keystore/info.txt`. Git ignores the

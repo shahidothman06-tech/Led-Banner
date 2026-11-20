@@ -39,7 +39,7 @@ jobs:
             exit 0
           fi
           echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
-          printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=upload\nkeyPassword=%s\n' \
+          printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=ledbanner-upload\nkeyPassword=%s\n' \
             "$RUNNER_TEMP/upload.jks" "$KEYSTORE_PASSWORD" "$KEYSTORE_PASSWORD" > keystore.properties
 
       - name: Build APK and AAB
