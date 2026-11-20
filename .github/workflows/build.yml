@@ -27,6 +27,21 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      - name: Set up release signing
+        # Repository secrets LEDBANNER_KEYSTORE_BASE64 and LEDBANNER_KEYSTORE_PASSWORD.
+        # Without them the .aab is built unsigned.
+        env:
+          KEYSTORE_BASE64: ${{ secrets.LEDBANNER_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.LEDBANNER_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ] || [ -z "$KEYSTORE_PASSWORD" ]; then
+            echo "::warning::Signing secrets are not set, so the .aab will be unsigned."
+            exit 0
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=upload\nkeyPassword=%s\n' \
+            "$RUNNER_TEMP/upload.jks" "$KEYSTORE_PASSWORD" "$KEYSTORE_PASSWORD" > keystore.properties
+
       - name: Build APK and AAB
         # desktopDir makes the copy tasks write LedBanner-test.apk and
         # LedBanner-release-<version>.aab into one folder.

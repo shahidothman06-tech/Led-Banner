@@ -11,6 +11,7 @@ captures/
 
 # Signing: never commit keystores or their passwords
 keystore.properties
+keystore/
 *.jks
 *.keystore
 

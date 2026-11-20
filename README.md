@@ -37,12 +37,16 @@ Every build copies its output to your Desktop automatically:
 
 **Signing for `buildToDesktop`.** Generate Signed App Bundle signs the bundle for you. The `buildToDesktop` task signs only if you create `keystore.properties` in the project root. Git ignores that file, so it is never committed:
 ```properties
-storeFile=C:/Users/<you>/keys/ledbanner-upload.jks
+storeFile=keystore/ledbanner-upload.jks
 storePassword=...
 keyAlias=upload
 keyPassword=...
 ```
-Without it the `.aab` is unsigned, which Play Console rejects, and the build prints a warning.
+Keep the upload key in `keystore/ledbanner-upload.jks`, with its details in `keystore/info.txt`. Git ignores the
+whole `keystore/` folder. Without a keystore the `.aab` is unsigned, which Play Console rejects, and the build prints a warning.
+
+GitHub signs its `.aab` with the same key from two repository secrets (Settings → Secrets and variables → Actions):
+`LEDBANNER_KEYSTORE_BASE64` (the `.jks` file as one line of base64) and `LEDBANNER_KEYSTORE_PASSWORD`.
 
 ### Builds from GitHub, straight to your Desktop
 Every push to `main` makes GitHub build `LedBanner-test.apk` and `LedBanner-release-<versionName>.aab`
