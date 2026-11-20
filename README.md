@@ -48,6 +48,16 @@ whole `keystore/` folder. Without a keystore the `.aab` is unsigned, which Play 
 GitHub signs its `.aab` with the same key from two repository secrets (Settings → Secrets and variables → Actions):
 `LEDBANNER_KEYSTORE_BASE64` (the `.jks` file as one line of base64) and `LEDBANNER_KEYSTORE_PASSWORD`.
 
+**Creating the key.** `tools/create-upload-key.ps1` does all of the above in one run: it creates the key and writes
+`keystore.properties` and `keystore/info.txt` (after checking that git ignores them), saves both GitHub secrets, and
+starts a GitHub build. It refuses to run if a key already exists, because Play needs the same key for every update.
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\create-upload-key.ps1 -GeneratePassword
+```
+Leave out `-GeneratePassword` to type your own password instead. The key for this app was created on 2026-11-21, so
+this is only needed for a new app or a new PC without the `keystore/` folder. Back up `keystore/`, because GitHub
+secrets can't be downloaded again.
+
 ### Builds from GitHub, straight to your Desktop
 Every push to `main` makes GitHub build `LedBanner-test.apk` and `LedBanner-release-<versionName>.aab`
 (`.github/workflows/build.yml`) and publish them on the **latest** release:
