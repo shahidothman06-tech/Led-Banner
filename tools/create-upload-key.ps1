@@ -135,7 +135,7 @@ $today = Get-Date -Format 'yyyy-MM-dd'
     'PRIVATE. Never upload or share this folder.'
     ''
     "Created         : $today"
-    'App package     : Tubers.LedBanner.LedLight'
+    'App package     : tubers.ledbanner.ledlight'
     'Keystore file   : keystore\ledbanner-upload.jks'
     'Keystore type   : PKCS12'
     "Key alias       : $alias"
