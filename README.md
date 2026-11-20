@@ -23,12 +23,12 @@ The UI talks to Kotlin through `window.Android` (see `MainActivity.Bridge`), and
 4. Upload `app/release/app-release.aab` to Play Console (a copy also lands on your Desktop, see below).
 
 ### Builds on your Desktop
-Every build copies its output to your Desktop automatically, replacing the previous copy of the same version:
+Every build copies its output to your Desktop automatically:
 
 | You do | Desktop file |
 |---|---|
-| **Build → Build App Bundle(s) / APK(s) → Build APK(s)** | `LedBanner-<version>-debug.apk`, the test APK you can install on any phone |
-| **Build → Generate Signed App Bundle** (release) | `LedBanner-<version>-release.aab` for Play Console |
+| **Build → Build App Bundle(s) / APK(s) → Build APK(s)** | `LedBanner-test.apk`, the test APK you can install on any phone (overwritten each time) |
+| **Build → Generate Signed App Bundle** (release) | `LedBanner-release-<versionName>.aab` for Play Console; the previous version's `.aab` goes to the Recycle Bin |
 | Gradle panel → **app → Tasks → desktop → buildToDesktop**, or `./gradlew buildToDesktop` | both files at once |
 
 - The ▶ Run button does **not** update the Desktop APK. Android Studio marks Run builds test-only, and phones refuse to install those from a file. Use **Build APK(s)** for an APK to share.

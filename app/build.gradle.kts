@@ -73,8 +73,9 @@ dependencies {
 
 // ---------------------------------------------------------------------------
 // Copy every build to the Desktop
-//   assembleDebug  (Build > Build APK(s))          -> Desktop/LedBanner-<version>-debug.apk
-//   bundleRelease  (Generate Signed App Bundle)    -> Desktop/LedBanner-<version>-release.aab
+//   assembleDebug  (Build > Build APK(s))          -> Desktop/LedBanner-test.apk (overwritten each time)
+//   bundleRelease  (Generate Signed App Bundle)    -> Desktop/LedBanner-release-<versionName>.aab
+//                  older LedBanner-release-*.aab files go to the Recycle Bin
 //   ./gradlew buildToDesktop                       -> both at once
 // To use another folder, add  desktopDir=D:/Builds  to ~/.gradle/gradle.properties.
 // ---------------------------------------------------------------------------
@@ -87,6 +88,11 @@ abstract class CopyToDesktop : DefaultTask() {
 
     @get:Input
     abstract val fileName: Property<String>
+
+    /** Older Desktop copies matching this regex go to the Recycle Bin, e.g. last version's .aab. */
+    @get:Input
+    @get:Optional
+    abstract val replaces: Property<String>
 
     /** Optional override from the `desktopDir` Gradle property. */
     @get:Input
@@ -113,6 +119,9 @@ abstract class CopyToDesktop : DefaultTask() {
         val target = File(dir, fileName.get())
         source.copyTo(target, overwrite = true)
         logger.lifecycle("Copied ${source.name} to ${target.absolutePath}")
+        replaces.orNull?.let(::Regex)?.let { old ->
+            dir.listFiles { f -> f != target && old.matches(f.name) }?.forEach(::recycle)
+        }
         if (target.extension == "aab" && !isSigned(target)) {
             logger.warn(
                 "WARNING: ${target.name} is not signed, so Play Console will reject it. " +
@@ -142,6 +151,25 @@ abstract class CopyToDesktop : DefaultTask() {
         return File(System.getProperty("user.home"), "Desktop")
     }
 
+    private fun recycle(file: File) {
+        if (!System.getProperty("os.name").startsWith("Windows", ignoreCase = true)) {
+            logger.lifecycle("Older copy left in place: ${file.absolutePath}")
+            return
+        }
+        val process = ProcessBuilder(
+            "powershell", "-NoProfile", "-NonInteractive", "-Command",
+            "Add-Type -AssemblyName Microsoft.VisualBasic; " +
+                "[Microsoft.VisualBasic.FileIO.FileSystem]::DeleteFile(" +
+                "\$env:LEDBANNER_OLD_FILE, 'OnlyErrorDialogs', 'SendToRecycleBin')",
+        ).redirectErrorStream(true).apply { environment()["LEDBANNER_OLD_FILE"] = file.absolutePath }.start()
+        val output = process.inputStream.bufferedReader().readText()
+        if (process.waitFor() == 0 && !file.exists()) {
+            logger.lifecycle("Moved older ${file.name} to the Recycle Bin")
+        } else {
+            logger.warn("Could not move ${file.name} to the Recycle Bin: ${output.trim()}")
+        }
+    }
+
     private fun isSigned(file: File): Boolean = ZipFile(file).use { zip ->
         zip.entries().asSequence().any { it.name.startsWith("META-INF/") && it.name.endsWith(".SF") }
     }
@@ -158,7 +186,7 @@ androidComponents {
                 group = "desktop"
                 description = "Copies the debug (test) APK to the Desktop."
                 builtOutput.from(variant.artifacts.get(SingleArtifact.APK))
-                fileName.set(versionName.map { "LedBanner-$it-debug.apk" })
+                fileName.set("LedBanner-test.apk")
                 desktopDir.set(desktopDirOverride)
                 testOnlyBuild.set(isTestOnlyBuild)
             }
@@ -166,7 +194,8 @@ androidComponents {
                 group = "desktop"
                 description = "Copies the release .aab (for Google Play) to the Desktop."
                 builtOutput.from(variant.artifacts.get(SingleArtifact.BUNDLE))
-                fileName.set(versionName.map { "LedBanner-$it-release.aab" })
+                fileName.set(versionName.map { "LedBanner-release-$it.aab" })
+                replaces.set("""LedBanner-release-.*\.aab""")
                 desktopDir.set(desktopDirOverride)
                 testOnlyBuild.set(false)
             }
