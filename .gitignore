@@ -1,0 +1,18 @@
+# Gradle / Android Studio
+.gradle/
+build/
+.idea/
+*.iml
+.kotlin/
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Signing: never commit keystores or their passwords
+keystore.properties
+*.jks
+*.keystore
+
+# Signed outputs from Android Studio's "Generate Signed App Bundle"
+app/release/
