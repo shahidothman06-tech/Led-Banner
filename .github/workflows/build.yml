@@ -50,15 +50,12 @@ jobs:
       - name: Publish to the "latest" release
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
           cd "$RUNNER_TEMP/out"
           ls -l
-          if ! gh release view latest >/dev/null 2>&1; then
-            gh release create latest --prerelease --title "Latest test build" --notes "Built automatically from main."
-          fi
-          gh release upload latest LedBanner-test.apk LedBanner-release-*.aab --clobber
-          # Drop .aab files from older versions
-          for old in $(gh release view latest --json assets -q '.assets[].name' | grep -E '^LedBanner-release-.*\.aab$'); do
-            [ -e "$old" ] || gh release delete-asset latest "$old" -y
-          done
-          gh release edit latest --notes "Built automatically from main at ${GITHUB_SHA::7}."
+          # Recreate the release so the tag points at this commit and only the newest files remain.
+          gh release delete latest --cleanup-tag -y || true
+          gh release create latest LedBanner-test.apk LedBanner-release-*.aab \
+            --target "$GITHUB_SHA" --prerelease --title "Latest test build" \
+            --notes "Built automatically from main at ${GITHUB_SHA::7}."
