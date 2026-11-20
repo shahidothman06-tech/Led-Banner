@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#07070b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>LED Banner</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+:root{
+  --bg:#07070b;--s1:rgba(255,255,255,.045);--s2:rgba(255,255,255,.08);--s3:rgba(255,255,255,.13);
+  --line:rgba(255,255,255,.08);--txt:#f4f4f8;--mut:#8d8da3;--acc:#ff3b30;--acc2:#ff8a00;
+  --grad:linear-gradient(135deg,#ff3b30,#ff8a00);--gold:linear-gradient(135deg,#ffd36a,#ff9f0a);
+  --r:18px;--ok:#30d158;
+  --font:"Rubik","Cairo","Noto Sans JP","Noto Sans KR","Noto Sans SC","Noto Sans Devanagari",system-ui,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0}
+html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--font);overflow:hidden;-webkit-user-select:none;user-select:none;overscroll-behavior:none}
+input,textarea{-webkit-user-select:text;user-select:text}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+input,textarea,select{font:inherit;color:var(--txt)}
+#app{position:relative;height:100%;max-width:440px;margin:0 auto;overflow:hidden;
+  background:radial-gradient(120% 50% at 50% -10%,#ff3b3022,transparent 60%),var(--bg)}
+@media(min-width:700px){
+  body{display:grid;place-items:center;background:#030305}
+  #app{height:min(900px,94vh);width:430px;border-radius:40px;border:1px solid #26262f;box-shadow:0 30px 80px #000,0 0 0 10px #111117}
+}
+
+/* ---------- views ---------- */
+.view{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;display:none;padding:0 16px 120px;scrollbar-width:none}
+.view::-webkit-scrollbar{display:none}
+.view.on{display:block;animation:fadeIn .22s ease}
+.view.push.on{animation:slideIn .26s cubic-bezier(.2,.8,.2,1)}
+@keyframes fadeIn{from{opacity:0}}
+@keyframes slideIn{from{opacity:0;transform:translateX(24px)}}
+[dir=rtl] .view.push.on{animation-name:slideInR}
+@keyframes slideInR{from{opacity:0;transform:translateX(-24px)}}
+
+.topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:10px;padding:calc(12px + env(safe-area-inset-top)) 0 10px;
+  background:linear-gradient(var(--bg) 70%,transparent);margin:0 -16px;padding-inline:16px}
+.topbar h1{font-size:19px;font-weight:800;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{width:40px;height:40px;border-radius:12px;background:var(--s1);border:1px solid var(--line);display:grid;place-items:center;font-size:18px;flex:0 0 auto}
+.iconbtn:active{transform:scale(.92)}
+.iconbtn.on{color:#ff375f}
+[dir=rtl] .flip{transform:scaleX(-1)}
+.logo{width:34px;height:34px;border-radius:10px;flex:0 0 auto;background:radial-gradient(circle,#ff3b30 33%,transparent 36%) 0 0/8.5px 8.5px,#1b0707;box-shadow:0 0 16px #ff3b3055}
+.propill{display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:999px;background:var(--gold);color:#1a1000;font-weight:800;font-size:13px}
+.propill.owned{background:var(--s2);color:#ffd36a}
+
+/* ---------- home ---------- */
+.hero{margin-top:6px}
+.hero h2{font-size:26px;font-weight:800;line-height:1.15;letter-spacing:-.3px}
+.hero p{color:var(--mut);margin-top:4px;font-size:14px}
+.quick{margin-top:14px;display:flex;gap:8px;padding:6px;border-radius:16px;background:var(--s1);border:1px solid var(--line)}
+.quick input{flex:1;min-width:0;background:none;border:0;outline:0;padding:10px;font-size:17px;font-weight:600}
+.btnGrad{background:var(--grad);color:#fff;font-weight:800;border-radius:12px;padding:0 18px;box-shadow:0 6px 18px #ff3b3044}
+.btnGrad:active{transform:scale(.97)}
+.search{margin-top:10px;display:flex;align-items:center;gap:8px;padding:0 12px;height:44px;border-radius:14px;background:var(--s1);border:1px solid var(--line);color:var(--mut)}
+.search input{flex:1;min-width:0;background:none;border:0;outline:0;font-size:15px;font-weight:500}
+
+.sec{display:flex;align-items:baseline;justify-content:space-between;margin:24px 0 10px}
+.sec h3{font-size:17px;font-weight:800}
+.sec button{color:var(--mut);font-size:13px;font-weight:600}
+
+.carousel{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -16px;padding:0 16px 4px;scrollbar-width:none}
+.carousel::-webkit-scrollbar{display:none}
+.feat{flex:0 0 86%;scroll-snap-align:center;border-radius:22px;padding:10px;background:var(--s1);border:1px solid var(--line);text-align:start;position:relative}
+.feat canvas{display:block;width:100%;aspect-ratio:16/7;border-radius:14px;background:#000}
+.feat .row{display:flex;align-items:center;justify-content:space-between;margin:10px 4px 2px;gap:8px}
+.feat .t{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.feat .k{color:var(--mut);font-size:12px;margin-top:2px}
+.use{padding:8px 14px;border-radius:999px;background:var(--s2);font-weight:700;font-size:13px;flex:0 0 auto}
+
+.cats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.cat{aspect-ratio:1;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  background:var(--s1);border:1px solid var(--line);font-size:11.5px;font-weight:600;position:relative;overflow:hidden}
+.cat .e{font-size:26px;filter:drop-shadow(0 4px 8px #0008)}
+.cat:before{content:"";position:absolute;inset:0;background:radial-gradient(80% 60% at 50% 0%,var(--tint),transparent 70%);opacity:.35}
+.cat span{position:relative}
+.cat:active{transform:scale(.95)}
+
+.hrow{display:flex;gap:10px;overflow-x:auto;margin:0 -16px;padding:0 16px 4px;scrollbar-width:none}
+.hrow::-webkit-scrollbar{display:none}
+.hrow .card{flex:0 0 44%}
+
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.card{position:relative;min-width:0;border-radius:16px;padding:6px;background:var(--s1);border:1px solid var(--line);text-align:start}
+.card:active{transform:scale(.97)}
+.card canvas{display:block;width:100%;aspect-ratio:10/3.4;border-radius:11px;background:#000}
+.card .t{font-size:12.5px;font-weight:700;margin:7px 3px 1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .k{font-size:11px;color:var(--mut);margin:0 3px 2px;display:flex;justify-content:space-between;gap:4px}
+.pro{position:absolute;top:11px;inset-inline-end:11px;background:var(--gold);color:#1a1000;font-size:9.5px;font-weight:900;padding:2px 7px;border-radius:999px;letter-spacing:.3px}
+
+/* chips */
+.chips{display:flex;gap:8px;overflow-x:auto;margin:0 -16px;padding:2px 16px 6px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;padding:8px 14px;border-radius:999px;background:var(--s1);border:1px solid var(--line);font-size:13.5px;font-weight:600;white-space:nowrap}
+.chip.on{background:#fff;color:#000;border-color:#fff}
+.count{color:var(--mut);font-size:13px;margin:6px 2px 10px}
+
+/* ---------- editor ---------- */
+.preview{position:relative;border-radius:20px;overflow:hidden;background:#000;border:1px solid var(--line);box-shadow:0 20px 50px #0009}
+.preview canvas{display:block;width:100%;aspect-ratio:16/7}
+.preview .tap{position:absolute;bottom:10px;inset-inline-end:10px;font-size:11.5px;font-weight:600;background:#000a;padding:4px 10px;border-radius:999px;pointer-events:none;backdrop-filter:blur(6px)}
+.box{margin-top:12px;padding:12px;border-radius:var(--r);background:var(--s1);border:1px solid var(--line)}
+.lbl{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--mut);font-weight:600;margin-bottom:8px}
+.lbl b{color:var(--txt);font-weight:700}
+textarea,.field input{width:100%;background:var(--s1);border:1px solid var(--line);border-radius:12px;padding:11px 12px;font-size:17px;font-weight:700;outline:0;resize:none}
+textarea:focus,.field input:focus{border-color:#ff3b30aa;background:var(--s2)}
+.field+.field{margin-top:10px}
+.link{color:#ff6b5f;font-size:13px;font-weight:600;margin-top:10px}
+.stabs{display:flex;gap:6px;margin-top:14px;padding:4px;border-radius:14px;background:var(--s1);border:1px solid var(--line)}
+.stabs button{flex:1;padding:9px 4px;border-radius:10px;font-size:13px;font-weight:700;color:var(--mut);display:flex;flex-direction:column;align-items:center;gap:2px}
+.stabs button i{font-style:normal;font-size:16px}
+.stabs button.on{background:var(--s3);color:var(--txt)}
+.panel{display:none}.panel.on{display:block;animation:fadeIn .2s}
+.sws{display:flex;flex-wrap:wrap;gap:10px}
+.sw{width:36px;height:36px;border-radius:50%;position:relative;box-shadow:inset 0 0 0 2px #0005}
+.sw.on:after{content:"";position:absolute;inset:-5px;border-radius:50%;border:2px solid #fff}
+.sw.custom{background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red)}
+.sw.custom input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.opts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.opt{padding:12px 4px;border-radius:14px;background:var(--s1);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;font-weight:600}
+.opt i{font-style:normal;font-size:22px;line-height:1}
+.opt.on{border-color:#fff;background:var(--s3)}
+.seg{display:flex;gap:4px;padding:4px;border-radius:12px;background:var(--s1);border:1px solid var(--line)}
+.seg button{flex:1;padding:8px 4px;border-radius:9px;font-size:13.5px;font-weight:700;color:var(--mut)}
+.seg button.on{background:#fff;color:#000}
+.ctl+.ctl{margin-top:16px}
+input[type=range]{width:100%;accent-color:#ff3b30;height:28px}
+.tog{display:flex;align-items:center;justify-content:space-between;padding:6px 0;font-weight:600;font-size:15px}
+.switch{position:relative;width:50px;height:30px;flex:0 0 auto}
+.switch input{opacity:0;width:0;height:0}
+.switch span{position:absolute;inset:0;border-radius:999px;background:#3a3a44;transition:.2s;cursor:pointer}
+.switch span:before{content:"";position:absolute;width:24px;height:24px;top:3px;left:3px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 2px 4px #0006}
+.switch input:checked+span{background:var(--ok)}
+.switch input:checked+span:before{transform:translateX(20px)}
+.cta{position:absolute;left:0;right:0;bottom:0;z-index:20;padding:14px 16px calc(14px + env(safe-area-inset-bottom));
+  background:linear-gradient(transparent,var(--bg) 35%);display:none}
+.cta.on{display:block}
+.cta button{width:100%;height:56px;border-radius:16px;background:var(--grad);color:#fff;font-size:18px;font-weight:800;box-shadow:0 10px 30px #ff3b3055}
+.cta button.locked{background:var(--gold);color:#1a1000;box-shadow:0 10px 30px #ff9f0a44}
+.cta button:active{transform:scale(.98)}
+
+/* ---------- library / settings ---------- */
+.list{border-radius:var(--r);background:var(--s1);border:1px solid var(--line);overflow:hidden;margin-top:12px}
+.li{display:flex;align-items:center;gap:12px;padding:10px 12px;border-top:1px solid var(--line);width:100%;text-align:start}
+.li:first-child{border-top:0}
+.li canvas{width:96px;aspect-ratio:10/3.4;border-radius:8px;background:#000;flex:0 0 auto}
+.li .t{flex:1;min-width:0;font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li .x{color:var(--mut);font-size:18px;padding:4px 6px}
+.li select{background:var(--s2);border:1px solid var(--line);border-radius:10px;padding:7px 8px;font-weight:600;max-width:52%}
+.li .lab{flex:1;font-weight:600}
+.empty{padding:36px 16px;text-align:center;color:var(--mut);font-size:14px;line-height:1.5}
+.empty .e{font-size:34px;display:block;margin-bottom:8px}
+
+/* ---------- tab bar ---------- */
+#tabbar{position:absolute;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:30;height:66px;border-radius:22px;
+  display:flex;align-items:center;justify-content:space-around;background:rgba(22,22,30,.82);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border:1px solid var(--line);box-shadow:0 10px 40px #000a}
+#tabbar.hide{display:none}
+#tabbar .tb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:600;color:var(--mut)}
+#tabbar .tb i{font-style:normal;font-size:20px;filter:grayscale(1);opacity:.7}
+#tabbar .tb.on{color:var(--txt)}#tabbar .tb.on i{filter:none;opacity:1}
+#tabbar .create{width:58px;height:58px;margin-top:-30px;border-radius:20px;background:var(--grad);display:grid;place-items:center;font-size:28px;font-weight:400;color:#fff;
+  box-shadow:0 10px 26px #ff3b3066,0 0 0 5px var(--bg);flex:0 0 auto}
+
+/* ---------- show mode ---------- */
+#show{position:fixed;inset:0;z-index:100;background:#000;display:none;touch-action:manipulation}
+#show.on{display:block}
+#show.rot{inset:auto;top:0;left:0;transform-origin:top left;transform:rotate(90deg) translateY(-100%)}
+#show canvas{display:block;width:100%;height:100%}
+.ov{position:absolute;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:10px;padding:16px;opacity:0;pointer-events:none;transition:opacity .25s}
+#show.ui .ov{opacity:1;pointer-events:auto}
+.ov.top{top:0;justify-content:space-between;background:linear-gradient(#000c,transparent)}
+.ov.bot{bottom:0;background:linear-gradient(transparent,#000c);padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+.ovb{min-width:52px;height:52px;padding:0 14px;border-radius:16px;background:rgba(255,255,255,.14);backdrop-filter:blur(10px);font-size:20px;font-weight:700;color:#fff}
+.ovb:active{transform:scale(.92)}
+.ovt{color:#fff;font-weight:700;font-size:14px;opacity:.85;max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#lockHint{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#000c;padding:12px 18px;border-radius:14px;font-weight:700;display:none;color:#fff}
+#lockHint.on{display:block}
+
+/* ---------- sheet / paywall ---------- */
+.scrim{position:absolute;inset:0;z-index:60;background:#0009;display:none;backdrop-filter:blur(3px)}
+.scrim.on{display:block}
+.sheet{position:absolute;left:0;right:0;bottom:0;border-radius:28px 28px 0 0;background:#121219;border-top:1px solid var(--line);
+  padding:10px 20px calc(20px + env(safe-area-inset-bottom));animation:up .28s cubic-bezier(.2,.8,.2,1);max-height:92%;overflow-y:auto}
+@keyframes up{from{transform:translateY(100%)}}
+.grab{width:42px;height:5px;border-radius:5px;background:#3a3a44;margin:0 auto 14px}
+.pwHead{text-align:center}
+.pwBadge{width:76px;height:76px;margin:4px auto 12px;border-radius:24px;background:var(--gold);display:grid;place-items:center;font-size:36px;box-shadow:0 12px 34px #ff9f0a55}
+.pwHead h2{font-size:24px;font-weight:900}
+.pwHead p{color:var(--mut);margin-top:6px;font-size:14px}
+.feats{margin:18px 0;display:grid;gap:12px}
+.feats div{display:flex;gap:12px;align-items:center;font-weight:600;font-size:15px}
+.feats i{font-style:normal;width:34px;height:34px;border-radius:10px;background:var(--s2);display:grid;place-items:center;flex:0 0 auto}
+.price{border:2px solid #ffb340;border-radius:18px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;background:#ffb3400f}
+.price b{font-size:22px}
+.price small{display:block;color:var(--mut);font-size:12.5px;font-weight:500;margin-top:2px}
+.tag{background:var(--gold);color:#1a1000;font-size:11px;font-weight:900;padding:4px 9px;border-radius:999px}
+.buy{width:100%;height:56px;border-radius:16px;margin-top:14px;background:var(--gold);color:#1a1000;font-size:17px;font-weight:900}
+.later{width:100%;padding:14px;color:var(--mut);font-weight:600}
+.fine{text-align:center;color:var(--mut);font-size:11.5px}
+
+#toast{position:absolute;left:50%;bottom:100px;z-index:200;transform:translateX(-50%) translateY(20px);opacity:0;transition:.25s;
+  background:#fff;color:#000;font-weight:700;font-size:14px;padding:11px 18px;border-radius:999px;pointer-events:none;white-space:nowrap}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- HOME -->
+  <section class="view on" id="v-home">
+    <div class="topbar">
+      <div class="logo"></div><h1 data-i18n="appName">LED Banner</h1>
+      <button class="propill" id="proPill">👑 PRO</button>
+      <button class="iconbtn" id="gear" aria-label="Settings">⚙️</button>
+    </div>
+    <div class="hero">
+      <h2 data-i18n="hello">What do you want to say?</h2>
+      <p data-i18n="helloSub">Type it, tap Show — your phone becomes an LED sign.</p>
+      <form class="quick" id="quickForm">
+        <input id="quickIn" dir="auto" maxlength="120" autocomplete="off" data-i18n-ph="quickPh" placeholder="Type your message…">
+        <button class="btnGrad" type="submit" data-i18n="showShort">Show</button>
+      </form>
+      <label class="search"><span>🔍</span><input id="homeSearch" type="search" data-i18n-ph="searchPh" placeholder="Search 150+ templates"></label>
+    </div>
+
+    <div class="sec"><h3 data-i18n="featured">Featured</h3></div>
+    <div class="carousel" id="featured"></div>
+
+    <div class="sec"><h3 data-i18n="categories">Categories</h3></div>
+    <div class="cats" id="cats"></div>
+
+    <div class="sec"><h3 id="popTitle"></h3><button id="popAll" data-i18n="seeAll">See all</button></div>
+    <div class="hrow" id="popular"></div>
+
+    <div class="sec"><h3 data-i18n="trending">Trending worldwide</h3></div>
+    <div class="hrow" id="trending"></div>
+  </section>
+
+  <!-- BROWSE -->
+  <section class="view push" id="v-browse">
+    <div class="topbar">
+      <button class="iconbtn back" aria-label="Back"><span class="flip">‹</span></button>
+      <h1 id="browseTitle"></h1>
+    </div>
+    <label class="search" style="margin-top:0"><span>🔍</span><input id="browseSearch" type="search" data-i18n-ph="searchPh" placeholder="Search"></label>
+    <div style="height:10px"></div>
+    <div class="chips" id="browseCats"></div>
+    <div class="chips" id="browseLangs"></div>
+    <div class="count" id="browseCount"></div>
+    <div class="grid" id="browseGrid"></div>
+  </section>
+
+  <!-- EDITOR -->
+  <section class="view push" id="v-editor">
+    <div class="topbar">
+      <button class="iconbtn back" aria-label="Back"><span class="flip">‹</span></button>
+      <h1 data-i18n="editBanner">Edit banner</h1>
+      <button class="iconbtn" id="favBtn" aria-label="Favorite">♡</button>
+      <button class="iconbtn" id="shareBtn" aria-label="Share">↗</button>
+    </div>
+    <div class="preview" id="prevBox"><canvas id="edCv"></canvas><span class="tap" data-i18n="tapFull">Tap to preview full screen</span></div>
+
+    <div class="box" id="textBox">
+      <div id="fields"></div>
+      <div id="freeText">
+        <div class="lbl"><span data-i18n="message">Message</span><span id="dirTag"></span></div>
+        <textarea id="edText" rows="2" dir="auto" maxlength="200"></textarea>
+      </div>
+      <button class="link" id="editFull" data-i18n="editText">✎ Edit full text</button>
+    </div>
+
+    <div class="stabs" id="stabs">
+      <button data-p="colors" class="on"><i>🎨</i><span data-i18n="colors">Colors</span></button>
+      <button data-p="effect"><i>✨</i><span data-i18n="effect">Effect</span></button>
+      <button data-p="dots"><i>⚪</i><span data-i18n="dots">LEDs</span></button>
+      <button data-p="motion"><i>➡️</i><span data-i18n="motion">Motion</span></button>
+    </div>
+
+    <div class="box panel on" id="p-colors">
+      <div class="ctl"><div class="lbl"><span data-i18n="textColor">Text</span></div><div class="sws" id="swText"></div></div>
+      <div class="ctl"><div class="lbl"><span data-i18n="background">Background</span></div><div class="sws" id="swBg"></div></div>
+    </div>
+    <div class="box panel" id="p-effect">
+      <div class="opts" id="fxOpts">
+        <button class="opt" data-v="none"><i>◻️</i><span data-i18n="none">None</span></button>
+        <button class="opt" data-v="blink"><i>💡</i><span data-i18n="blink">Blink</span></button>
+        <button class="opt" data-v="rainbow"><i>🌈</i><span data-i18n="rainbow">Rainbow</span></button>
+        <button class="opt" data-v="wave"><i>〰️</i><span data-i18n="wave">Wave</span></button>
+      </div>
+    </div>
+    <div class="box panel" id="p-dots">
+      <div class="ctl"><div class="lbl"><span data-i18n="shape">Dot shape</span></div>
+        <div class="opts" id="shapeOpts">
+          <button class="opt" data-v="circle"><i>●</i></button><button class="opt" data-v="square"><i>■</i></button>
+          <button class="opt" data-v="star"><i>★</i></button><button class="opt" data-v="heart"><i>♥</i></button>
+        </div></div>
+      <div class="ctl"><div class="lbl"><span data-i18n="size">LED density</span><b id="rowsV"></b></div><input type="range" id="rows" min="14" max="48"></div>
+      <div class="ctl"><div class="lbl"><span data-i18n="gap">Dot gap</span><b id="gapV"></b></div><input type="range" id="gap" min="0" max="45"></div>
+      <div class="ctl">
+        <div class="tog"><span data-i18n="glow">LED glow</span><label class="switch"><input type="checkbox" id="glow"><span></span></label></div>
+        <div class="tog"><span data-i18n="unlit">Show unlit LEDs</span><label class="switch"><input type="checkbox" id="offDots"><span></span></label></div>
+      </div>
+    </div>
+    <div class="box panel" id="p-motion">
+      <div class="ctl"><div class="lbl"><span data-i18n="mode">Mode</span></div>
+        <div class="seg" id="modeSeg"><button data-v="scroll" data-i18n="scroll">Scroll</button><button data-v="static" data-i18n="static">Static</button></div></div>
+      <div class="ctl"><div class="lbl"><span data-i18n="direction">Direction</span></div>
+        <div class="seg" id="dirSeg"><button data-v="auto" data-i18n="auto">Auto</button><button data-v="left">←</button><button data-v="right">→</button></div></div>
+      <div class="ctl"><div class="lbl"><span data-i18n="speed">Speed</span><b id="speedV"></b></div><input type="range" id="speed" min="2" max="45"></div>
+    </div>
+  </section>
+
+  <!-- LIBRARY -->
+  <section class="view" id="v-library">
+    <div class="topbar"><h1 data-i18n="library">Library</h1></div>
+    <div class="seg" id="libSeg"><button data-v="fav" class="on" data-i18n="favorites">Favorites</button><button data-v="recent" data-i18n="recent">Recent</button></div>
+    <div id="libList"></div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="view push" id="v-settings">
+    <div class="topbar">
+      <button class="iconbtn back" aria-label="Back"><span class="flip">‹</span></button>
+      <h1 data-i18n="settings">Settings</h1>
+    </div>
+    <div class="list">
+      <div class="li"><span class="lab" data-i18n="appLang">App language</span>
+        <select id="appLang"><option value="en">English</option><option value="es">Español</option><option value="pt">Português</option><option value="fr">Français</option><option value="ar">العربية</option></select></div>
+      <div class="li"><span class="lab" data-i18n="tplLang">Template language</span><select id="tplLang"></select></div>
+    </div>
+    <div class="list">
+      <div class="li"><span class="lab" data-i18n="haptics">Haptic feedback</span><label class="switch"><input type="checkbox" id="haptics"><span></span></label></div>
+    </div>
+    <div class="list">
+      <button class="li" id="setPro"><span class="lab">👑 <span data-i18n="getPro">LED Banner PRO</span></span><span class="x">›</span></button>
+      <button class="li" id="restore"><span class="lab" data-i18n="restore">Restore purchase</span><span class="x">›</span></button>
+    </div>
+    <div class="list">
+      <button class="li" id="rateBtn"><span class="lab">⭐ <span data-i18n="rate">Rate the app</span></span><span class="x">›</span></button>
+      <button class="li" id="privBtn"><span class="lab">🔒 <span data-i18n="privacy">Privacy policy</span></span><span class="x">›</span></button>
+    </div>
+    <p class="fine" style="margin-top:18px" data-i18n="about">Prototype · No ads on your banner · Made for the world 🌍</p>
+  </section>
+
+  <!-- PRIVACY -->
+  <section class="view push" id="v-privacy">
+    <div class="topbar"><button class="iconbtn back" aria-label="Back"><span class="flip">‹</span></button><h1 data-i18n="privacy">Privacy policy</h1></div>
+    <div class="box" style="line-height:1.6;font-size:14.5px;color:#cfcfdc" dir="ltr">
+      <p><b>LED Banner</b> (Tubers.LedBanner.LedLight) respects your privacy.</p><br>
+      <p><b>No data collection.</b> The app does not collect, store on servers, or share any personal data. It has no accounts, no analytics and no ads.</p><br>
+      <p><b>On your device only.</b> Your messages, favorites and settings are saved only on your phone and are removed when you uninstall the app.</p><br>
+      <p><b>No internet needed.</b> The app works fully offline and does not request internet, location, camera, microphone or contacts permissions.</p><br>
+      <p><b>Purchases.</b> The optional PRO upgrade is processed by Google Play. We never see your payment details. See Google's privacy policy for how Google handles payments.</p><br>
+      <p><b>Children.</b> The app is suitable for all ages and collects no data from anyone, including children.</p><br>
+      <p><b>Contact.</b> Questions? Email us at the address shown on our Google Play listing.</p><br>
+      <p style="color:var(--mut)">Last updated: November 2026</p>
+    </div>
+  </section>
+
+  <!-- TAB BAR -->
+  <nav id="tabbar">
+    <button class="tb on" data-tab="home"><i>🏠</i><span data-i18n="home">Home</span></button>
+    <button class="create" id="createBtn" aria-label="Create">＋</button>
+    <button class="tb" data-tab="library"><i>📚</i><span data-i18n="library">Library</span></button>
+  </nav>
+
+  <div class="cta" id="cta"><button id="showBtn"></button></div>
+
+  <!-- PAYWALL -->
+  <div class="scrim" id="pw"><div class="sheet">
+    <div class="grab"></div>
+    <div class="pwHead"><div class="pwBadge">👑</div><h2 data-i18n="proTitle">LED Banner PRO</h2><p data-i18n="proSub">Pay once. Yours forever. No subscription.</p></div>
+    <div class="feats">
+      <div><i>✨</i><span data-i18n="p1">All PRO templates + new packs every season</span></div>
+      <div><i>📱</i><span data-i18n="p2">Sync several phones into one big banner</span></div>
+      <div><i>🎬</i><span data-i18n="p3">Export as video & GIF for TikTok / Reels</span></div>
+      <div><i>🔤</i><span data-i18n="p4">Premium LED fonts & effects</span></div>
+      <div><i>🚫</i><span data-i18n="p5">Never any ads — not even in menus</span></div>
+    </div>
+    <div class="price"><div><b id="pwPrice">$4.99</b><small data-i18n="lifetime">Lifetime · one-time payment</small></div><span class="tag" data-i18n="best">BEST VALUE</span></div>
+    <button class="buy" id="buyBtn" data-i18n="buy">Unlock PRO</button>
+    <button class="later" id="laterBtn" data-i18n="later">Maybe later</button>
+    <p class="fine" data-i18n="fine">Prototype — no real payment is made.</p>
+  </div></div>
+
+  <div id="toast"></div>
+</div>
+
+<!-- SHOW MODE -->
+<div id="show">
+  <canvas id="showCv"></canvas>
+  <div class="ov top"><span class="ovt" id="showTitle"></span><button class="ovb" id="sClose">✕</button></div>
+  <div class="ov bot">
+    <button class="ovb" id="sSlow">−</button><button class="ovb" id="sPlay">⏸</button><button class="ovb" id="sFast">+</button>
+    <button class="ovb" id="sDir">⇄</button><button class="ovb" id="sLock">🔒</button>
+  </div>
+  <div id="lockHint"></div>
+</div>
+
+<script>
+(() => {
+"use strict";
+const NATIVE=window.Android||null;
+const PLAY_URL="https://play.google.com/store/apps/details?id=Tubers.LedBanner.LedLight";
+// ================= I18N =================
+const I18N={
+en:{appName:"LED Banner",hello:"What do you want to say?",helloSub:"Type it, tap Show — your phone becomes an LED sign.",quickPh:"Type your message…",showShort:"Show",
+ searchPh:"Search 150+ templates",featured:"Featured",categories:"Categories",popularIn:"Popular in {l}",seeAll:"See all",trending:"Trending worldwide",
+ all:"All",allLangs:"🌍 All",templates:"templates",editBanner:"Edit banner",tapFull:"Tap to preview full screen",message:"Message",editText:"✎ Edit full text",
+ colors:"Colors",effect:"Effect",dots:"LEDs",motion:"Motion",textColor:"Text",background:"Background",none:"None",blink:"Blink",rainbow:"Rainbow",wave:"Wave",
+ shape:"Dot shape",size:"LED density",gap:"Dot gap",glow:"LED glow",unlit:"Show unlit LEDs",mode:"Mode",scroll:"Scroll",static:"Static",direction:"Direction",auto:"Auto",speed:"Speed",
+ show:"▶  Show",unlock:"👑  Unlock to show",library:"Library",favorites:"Favorites",recent:"Recent",home:"Home",settings:"Settings",
+ emptyFav:"Tap ♡ on any banner to save it here.",emptyRecent:"Banners you show will appear here.",appLang:"App language",tplLang:"Template language",haptics:"Haptic feedback",
+ getPro:"LED Banner PRO",restore:"Restore purchase",about:"Prototype · No ads on your banner · Made for the world 🌍",
+ proTitle:"LED Banner PRO",proSub:"Pay once. Yours forever. No subscription.",p1:"All PRO templates + new packs every season",p2:"Sync several phones into one big banner",
+ p3:"Export as video & GIF for TikTok / Reels",p4:"Premium LED fonts & effects",p5:"Never any ads — not even in menus",lifetime:"Lifetime · one-time payment",best:"BEST VALUE",
+ buy:"Unlock PRO",later:"Maybe later",fine:"Prototype — no real payment is made.",proOn:"👑 PRO unlocked",saved:"♥ Saved to favorites",removed:"Removed from favorites",
+ copied:"🔗 Link copied — send it to a friend",restored:"Nothing to restore in the prototype",locked:"🔒 Locked · double-tap to unlock",unlocked:"🔓 Unlocked",rtl:"RTL",ltr:"LTR",
+ f_name:"Name",f_team:"Team",f_artist:"Artist / idol",f_flight:"Flight",f_n:"Discount %",f_year:"Year",f_song:"Song",
+ c_airport:"Airport",c_birthday:"Birthday",c_sports:"Sports",c_concert:"Concert",c_love:"Love",c_shop:"Shop",c_party:"Party",c_holiday:"Holidays",c_celebrate:"Celebrate",c_road:"Car",c_sos:"Help",c_all:"All"},
+es:{appName:"Letrero LED",hello:"¿Qué quieres decir?",helloSub:"Escríbelo, toca Mostrar — tu móvil se vuelve un letrero LED.",quickPh:"Escribe tu mensaje…",showShort:"Mostrar",
+ searchPh:"Busca entre 150+ plantillas",featured:"Destacados",categories:"Categorías",popularIn:"Popular en {l}",seeAll:"Ver todo",trending:"Tendencia mundial",
+ all:"Todo",allLangs:"🌍 Todos",templates:"plantillas",editBanner:"Editar letrero",tapFull:"Toca para ver en pantalla completa",message:"Mensaje",editText:"✎ Editar texto completo",
+ colors:"Colores",effect:"Efecto",dots:"LEDs",motion:"Movimiento",textColor:"Texto",background:"Fondo",none:"Ninguno",blink:"Parpadeo",rainbow:"Arcoíris",wave:"Onda",
+ shape:"Forma del punto",size:"Densidad LED",gap:"Espacio",glow:"Brillo LED",unlit:"Mostrar LEDs apagados",mode:"Modo",scroll:"Desplazar",static:"Fijo",direction:"Dirección",auto:"Auto",speed:"Velocidad",
+ show:"▶  Mostrar",unlock:"👑  Desbloquear",library:"Biblioteca",favorites:"Favoritos",recent:"Recientes",home:"Inicio",settings:"Ajustes",
+ emptyFav:"Toca ♡ en un letrero para guardarlo aquí.",emptyRecent:"Tus letreros aparecerán aquí.",appLang:"Idioma de la app",tplLang:"Idioma de plantillas",haptics:"Vibración",
+ getPro:"LED Banner PRO",restore:"Restaurar compra",about:"Prototipo · Sin anuncios en tu letrero · Hecho para el mundo 🌍",
+ proTitle:"LED Banner PRO",proSub:"Paga una vez. Tuyo para siempre. Sin suscripción.",p1:"Todas las plantillas PRO + nuevos packs",p2:"Sincroniza varios móviles en un gran letrero",
+ p3:"Exporta video y GIF para TikTok / Reels",p4:"Fuentes y efectos LED premium",p5:"Nunca anuncios — ni en los menús",lifetime:"De por vida · pago único",best:"MEJOR VALOR",
+ buy:"Desbloquear PRO",later:"Quizás luego",fine:"Prototipo — no se realiza ningún pago.",proOn:"👑 PRO desbloqueado",saved:"♥ Guardado en favoritos",removed:"Quitado de favoritos",
+ copied:"🔗 Enlace copiado — envíalo",restored:"Nada que restaurar en el prototipo",locked:"🔒 Bloqueado · doble toque para desbloquear",unlocked:"🔓 Desbloqueado",rtl:"RTL",ltr:"LTR",
+ f_name:"Nombre",f_team:"Equipo",f_artist:"Artista / ídolo",f_flight:"Vuelo",f_n:"Descuento %",f_year:"Año",f_song:"Canción",
+ c_airport:"Aeropuerto",c_birthday:"Cumpleaños",c_sports:"Deportes",c_concert:"Concierto",c_love:"Amor",c_shop:"Tienda",c_party:"Fiesta",c_holiday:"Festivos",c_celebrate:"Celebrar",c_road:"Coche",c_sos:"Ayuda",c_all:"Todo"},
+pt:{appName:"Painel LED",hello:"O que você quer dizer?",helloSub:"Digite, toque em Mostrar — seu celular vira um painel LED.",quickPh:"Digite sua mensagem…",showShort:"Mostrar",
+ searchPh:"Busque em 150+ modelos",featured:"Destaques",categories:"Categorias",popularIn:"Popular em {l}",seeAll:"Ver tudo",trending:"Em alta no mundo",
+ all:"Todos",allLangs:"🌍 Todos",templates:"modelos",editBanner:"Editar painel",tapFull:"Toque para ver em tela cheia",message:"Mensagem",editText:"✎ Editar texto completo",
+ colors:"Cores",effect:"Efeito",dots:"LEDs",motion:"Movimento",textColor:"Texto",background:"Fundo",none:"Nenhum",blink:"Piscar",rainbow:"Arco-íris",wave:"Onda",
+ shape:"Formato",size:"Densidade LED",gap:"Espaço",glow:"Brilho LED",unlit:"Mostrar LEDs apagados",mode:"Modo",scroll:"Rolar",static:"Fixo",direction:"Direção",auto:"Auto",speed:"Velocidade",
+ show:"▶  Mostrar",unlock:"👑  Desbloquear",library:"Biblioteca",favorites:"Favoritos",recent:"Recentes",home:"Início",settings:"Ajustes",
+ emptyFav:"Toque em ♡ para salvar aqui.",emptyRecent:"Seus painéis aparecerão aqui.",appLang:"Idioma do app",tplLang:"Idioma dos modelos",haptics:"Vibração",
+ getPro:"LED Banner PRO",restore:"Restaurar compra",about:"Protótipo · Sem anúncios no painel · Feito para o mundo 🌍",
+ proTitle:"LED Banner PRO",proSub:"Pague uma vez. Seu para sempre. Sem assinatura.",p1:"Todos os modelos PRO + novos pacotes",p2:"Sincronize vários celulares num painel gigante",
+ p3:"Exporte vídeo e GIF para TikTok / Reels",p4:"Fontes e efeitos LED premium",p5:"Nunca anúncios — nem nos menus",lifetime:"Vitalício · pagamento único",best:"MELHOR VALOR",
+ buy:"Desbloquear PRO",later:"Talvez depois",fine:"Protótipo — nenhum pagamento é feito.",proOn:"👑 PRO desbloqueado",saved:"♥ Salvo nos favoritos",removed:"Removido dos favoritos",
+ copied:"🔗 Link copiado — envie para alguém",restored:"Nada para restaurar no protótipo",locked:"🔒 Bloqueado · toque duas vezes",unlocked:"🔓 Desbloqueado",rtl:"RTL",ltr:"LTR",
+ f_name:"Nome",f_team:"Time",f_artist:"Artista / ídolo",f_flight:"Voo",f_n:"Desconto %",f_year:"Ano",f_song:"Música",
+ c_airport:"Aeroporto",c_birthday:"Aniversário",c_sports:"Esportes",c_concert:"Show",c_love:"Amor",c_shop:"Loja",c_party:"Festa",c_holiday:"Feriados",c_celebrate:"Celebrar",c_road:"Carro",c_sos:"Ajuda",c_all:"Todos"},
+fr:{appName:"Panneau LED",hello:"Que voulez-vous dire ?",helloSub:"Tapez, touchez Afficher — votre téléphone devient un panneau LED.",quickPh:"Votre message…",showShort:"Afficher",
+ searchPh:"Rechercher parmi 150+ modèles",featured:"À la une",categories:"Catégories",popularIn:"Populaire en {l}",seeAll:"Tout voir",trending:"Tendances mondiales",
+ all:"Tous",allLangs:"🌍 Toutes",templates:"modèles",editBanner:"Modifier",tapFull:"Touchez pour le plein écran",message:"Message",editText:"✎ Modifier le texte",
+ colors:"Couleurs",effect:"Effet",dots:"LED",motion:"Mouvement",textColor:"Texte",background:"Fond",none:"Aucun",blink:"Clignoter",rainbow:"Arc-en-ciel",wave:"Vague",
+ shape:"Forme des points",size:"Densité LED",gap:"Espacement",glow:"Lueur LED",unlit:"LED éteintes visibles",mode:"Mode",scroll:"Défilant",static:"Fixe",direction:"Direction",auto:"Auto",speed:"Vitesse",
+ show:"▶  Afficher",unlock:"👑  Débloquer",library:"Bibliothèque",favorites:"Favoris",recent:"Récents",home:"Accueil",settings:"Réglages",
+ emptyFav:"Touchez ♡ pour enregistrer ici.",emptyRecent:"Vos panneaux apparaîtront ici.",appLang:"Langue de l’app",tplLang:"Langue des modèles",haptics:"Vibrations",
+ getPro:"LED Banner PRO",restore:"Restaurer l’achat",about:"Prototype · Aucune pub sur le panneau · Fait pour le monde 🌍",
+ proTitle:"LED Banner PRO",proSub:"Payez une fois. À vous pour toujours. Sans abonnement.",p1:"Tous les modèles PRO + nouveaux packs",p2:"Synchronisez plusieurs téléphones",
+ p3:"Export vidéo & GIF pour TikTok / Reels",p4:"Polices et effets LED premium",p5:"Jamais de pub — même dans les menus",lifetime:"À vie · paiement unique",best:"MEILLEUR CHOIX",
+ buy:"Débloquer PRO",later:"Plus tard",fine:"Prototype — aucun paiement réel.",proOn:"👑 PRO débloqué",saved:"♥ Ajouté aux favoris",removed:"Retiré des favoris",
+ copied:"🔗 Lien copié — envoyez-le",restored:"Rien à restaurer dans le prototype",locked:"🔒 Verrouillé · double-touchez",unlocked:"🔓 Déverrouillé",rtl:"RTL",ltr:"LTR",
+ f_name:"Prénom",f_team:"Équipe",f_artist:"Artiste / idole",f_flight:"Vol",f_n:"Remise %",f_year:"Année",f_song:"Chanson",
+ c_airport:"Aéroport",c_birthday:"Anniversaire",c_sports:"Sport",c_concert:"Concert",c_love:"Amour",c_shop:"Boutique",c_party:"Fête",c_holiday:"Fêtes",c_celebrate:"Célébrer",c_road:"Voiture",c_sos:"Aide",c_all:"Tous"},
+ar:{appName:"لوحة LED",hello:"ماذا تريد أن تقول؟",helloSub:"اكتبها واضغط عرض — جوالك يصبح لوحة LED.",quickPh:"اكتب رسالتك…",showShort:"عرض",
+ searchPh:"ابحث في أكثر من ١٥٠ قالب",featured:"مميز",categories:"الفئات",popularIn:"الأكثر شيوعاً بـ{l}",seeAll:"عرض الكل",trending:"رائج حول العالم",
+ all:"الكل",allLangs:"🌍 الكل",templates:"قالب",editBanner:"تعديل اللوحة",tapFull:"اضغط للعرض بملء الشاشة",message:"الرسالة",editText:"✎ تعديل النص كاملاً",
+ colors:"الألوان",effect:"التأثير",dots:"النقاط",motion:"الحركة",textColor:"النص",background:"الخلفية",none:"بدون",blink:"وميض",rainbow:"قوس قزح",wave:"موجة",
+ shape:"شكل النقطة",size:"كثافة LED",gap:"المسافة",glow:"توهج LED",unlit:"إظهار النقاط المطفأة",mode:"الوضع",scroll:"متحرك",static:"ثابت",direction:"الاتجاه",auto:"تلقائي",speed:"السرعة",
+ show:"▶  اعرض",unlock:"👑  افتح للعرض",library:"المكتبة",favorites:"المفضلة",recent:"الأخيرة",home:"الرئيسية",settings:"الإعدادات",
+ emptyFav:"اضغط ♡ على أي لوحة لحفظها هنا.",emptyRecent:"اللوحات التي تعرضها تظهر هنا.",appLang:"لغة التطبيق",tplLang:"لغة القوالب",haptics:"الاهتزاز",
+ getPro:"LED Banner PRO",restore:"استعادة الشراء",about:"نموذج أولي · بدون إعلانات على اللوحة · صُنع للعالم 🌍",
+ proTitle:"LED Banner PRO",proSub:"ادفع مرة واحدة. لك للأبد. بدون اشتراك.",p1:"كل قوالب PRO + حزم جديدة كل موسم",p2:"زامن عدة جوالات في لوحة واحدة كبيرة",
+ p3:"تصدير فيديو و GIF لتيك توك وريلز",p4:"خطوط وتأثيرات LED مميزة",p5:"بدون إعلانات أبداً — حتى في القوائم",lifetime:"مدى الحياة · دفعة واحدة",best:"أفضل قيمة",
+ buy:"افتح PRO",later:"لاحقاً",fine:"نموذج أولي — لا يتم أي دفع حقيقي.",proOn:"👑 تم فتح PRO",saved:"♥ أُضيفت للمفضلة",removed:"أُزيلت من المفضلة",
+ copied:"🔗 تم نسخ الرابط — أرسله لصديق",restored:"لا يوجد ما يُستعاد في النموذج",locked:"🔒 مقفلة · اضغط مرتين للفتح",unlocked:"🔓 تم الفتح",rtl:"من اليمين",ltr:"من اليسار",
+ f_name:"الاسم",f_team:"الفريق",f_artist:"الفنان",f_flight:"الرحلة",f_n:"نسبة الخصم",f_year:"السنة",f_song:"الأغنية",
+ c_airport:"المطار",c_birthday:"عيد ميلاد",c_sports:"رياضة",c_concert:"حفلات",c_love:"حب",c_shop:"متجر",c_party:"حفلة",c_holiday:"مناسبات",c_celebrate:"تهاني",c_road:"السيارة",c_sos:"مساعدة",c_all:"الكل"}
+};
+
+const EXTRA={
+ en:{rate:"Rate the app",privacy:"Privacy policy",shareMsg:"Made with LED Banner 📱✨ Get it free:",fineNative:"One-time purchase via Google Play. No subscription.",pending:"⏳ Payment pending…",storeErr:"Google Play is not available right now",noPurchase:"No previous purchase found",about:"No ads on your banner · Made for the world 🌍"},
+ es:{rate:"Valorar la app",privacy:"Política de privacidad",shareMsg:"Hecho con LED Banner 📱✨ Descárgala gratis:",fineNative:"Pago único con Google Play. Sin suscripción.",pending:"⏳ Pago pendiente…",storeErr:"Google Play no está disponible ahora",noPurchase:"No se encontró ninguna compra",about:"Sin anuncios en tu letrero · Hecho para el mundo 🌍"},
+ pt:{rate:"Avaliar o app",privacy:"Política de privacidade",shareMsg:"Feito com LED Banner 📱✨ Baixe grátis:",fineNative:"Pagamento único pelo Google Play. Sem assinatura.",pending:"⏳ Pagamento pendente…",storeErr:"Google Play indisponível no momento",noPurchase:"Nenhuma compra encontrada",about:"Sem anúncios no painel · Feito para o mundo 🌍"},
+ fr:{rate:"Noter l’app",privacy:"Confidentialité",shareMsg:"Créé avec LED Banner 📱✨ Gratuit :",fineNative:"Achat unique via Google Play. Sans abonnement.",pending:"⏳ Paiement en attente…",storeErr:"Google Play est indisponible",noPurchase:"Aucun achat trouvé",about:"Aucune pub sur le panneau · Fait pour le monde 🌍"},
+ ar:{rate:"قيّم التطبيق",privacy:"سياسة الخصوصية",shareMsg:"صُنعت بتطبيق LED Banner 📱✨ حمّله مجاناً:",fineNative:"دفعة واحدة عبر Google Play. بدون اشتراك.",pending:"⏳ الدفع قيد الانتظار…",storeErr:"Google Play غير متاح حالياً",noPurchase:"لم يتم العثور على عملية شراء",about:"بدون إعلانات على اللوحة · صُنع للعالم 🌍"}
+};
+for(const k in EXTRA) Object.assign(I18N[k],EXTRA[k]);
+const CATS=[["airport","✈️","#22d3ee"],["birthday","🎂","#ff3fa4"],["sports","⚽","#19e36b"],["concert","🎤","#a855f7"],["love","💖","#ff375f"],["shop","🛍️","#ffb000"],
+  ["party","🎉","#bf5af2"],["holiday","🎄","#30d158"],["celebrate","🎓","#ffd60a"],["road","🚗","#64d2ff"],["sos","🆘","#ff3b30"]];
+const CATICON=Object.fromEntries(CATS.map(c=>[c[0],c[1]]));
+const LANGS={en:"English",es:"Español",pt:"Português",fr:"Français",de:"Deutsch",it:"Italiano",ja:"日本語",ko:"한국어",zh:"中文",hi:"हिन्दी",ar:"العربية",tr:"Türkçe",id:"Bahasa",ru:"Русский"};
+const DEF={name:"ALEX",team:"BLUE",artist:"YOUR STAR",flight:"BA 117",n:"50",year:"2027",song:"OUR SONG"};
+
+// ================= TEMPLATES =================
+const R="#ff2a2a",O="#ffb000",Y="#ffe500",G="#19e36b",C="#22d3ee",B="#3b82f6",P="#a855f7",K="#ff3fa4",W="#ffffff",OR="#ff6a00";
+const T=[
+ ["airport","en","WELCOME HOME {name}! ✈",{c:C}],["airport","en","{name} · {flight}",{c:W,sh:"square"}],["airport","en","LOOKING FOR {name}",{c:O,fx:"blink"}],
+ ["airport","es","¡BIENVENIDO A CASA {name}!",{c:O}],["airport","pt","BEM-VINDO {name}!",{c:G}],["airport","fr","BIENVENUE {name} !",{c:B}],
+ ["airport","de","WILLKOMMEN ZURÜCK {name}!",{c:Y}],["airport","it","BENTORNATO {name}!",{c:G}],["airport","ja","おかえり {name}！",{c:K},{name:"ゆき"}],
+ ["airport","ko","환영해요 {name}!",{c:C},{name:"민지"}],["airport","zh","欢迎回家 {name}",{c:R},{name:"小明"}],["airport","ar","أهلاً بعودتك {name}",{c:G},{name:"أحمد"}],
+ ["airport","tr","HOŞ GELDİN {name}!",{c:R}],["airport","id","SELAMAT DATANG {name}!",{c:O}],["airport","hi","स्वागत है {name}",{c:O},{name:"राहुल"}],
+ ["birthday","en","HAPPY BIRTHDAY {name}! 🎂",{c:K,fx:"rainbow"}],["birthday","es","¡FELIZ CUMPLEAÑOS {name}!",{c:O,fx:"rainbow"}],
+ ["birthday","pt","PARABÉNS {name}! 🎉",{c:Y,fx:"wave"}],["birthday","fr","JOYEUX ANNIVERSAIRE {name} !",{c:K,sh:"heart"}],
+ ["birthday","de","ALLES GUTE ZUM GEBURTSTAG {name}!",{c:P}],["birthday","it","BUON COMPLEANNO {name}!",{c:G}],
+ ["birthday","ja","お誕生日おめでとう {name}",{c:K},{name:"ゆき"}],["birthday","ko","생일 축하해 {name} 🎂",{c:O},{name:"민지"}],
+ ["birthday","zh","生日快乐 {name}",{c:R},{name:"小明"}],["birthday","hi","जन्मदिन मुबारक {name}",{c:O},{name:"प्रिया"}],
+ ["birthday","ar","عيد ميلاد سعيد {name}",{c:K},{name:"سارة"}],["birthday","ru","С ДНЁМ РОЖДЕНИЯ {name}!",{c:C},{name:"МАША"}],
+ ["birthday","tr","İYİ Kİ DOĞDUN {name}!",{c:R,fx:"rainbow"}],["birthday","id","SELAMAT ULANG TAHUN {name}!",{c:P}],
+ ["sports","en","GO {team} GO!",{c:G,fx:"wave",sp:18}],["sports","en","GOOOOAL!!! ⚽",{c:Y,fx:"blink",sp:24}],["sports","en","DE-FENSE! DE-FENSE!",{c:B,fx:"blink"}],
+ ["sports","en","MVP 🏆",{c:O,m:"static",sh:"star"}],["sports","en","WE ARE THE CHAMPIONS",{c:O,fx:"rainbow"},null,true],
+ ["sports","es","¡VAMOS {team}!",{c:R,fx:"wave"}],["sports","es","¡GOOOOL!",{c:Y,fx:"blink",sp:24}],["sports","pt","VAI {team}!",{c:G,fx:"wave"}],
+ ["sports","fr","ALLEZ {team} !",{c:B}],["sports","de","AUF GEHT'S {team}!",{c:R}],["sports","it","FORZA {team}!",{c:B,fx:"wave"}],
+ ["sports","ar","يلا {team}!",{c:G,fx:"wave"},{team:"الأخضر"}],["sports","ja","がんばれ {team}!",{c:R},{team:"日本"}],
+ ["sports","ko","{team} 화이팅!",{c:R},{team:"대한민국"}],["sports","tr","HAYDİ {team}!",{c:O}],["sports","id","AYO {team}!",{c:R}],
+ ["concert","en","I ❤ {artist}",{c:K,sh:"heart"}],["concert","en","{artist} SAVED MY LIFE",{c:P}],["concert","en","PLAY {song}!",{c:C}],
+ ["concert","en","ENCORE! ENCORE!",{c:Y,fx:"rainbow"}],["concert","en","WAVE AT ME! 👋",{c:Y,fx:"blink"},null,true],
+ ["concert","en","FIRST CONCERT EVER!",{c:C,fx:"wave"},null,true],["concert","ko","{artist} 사랑해 💜",{c:P,sh:"heart"},{artist:"오빠"}],
+ ["concert","ja","{artist} 大好き！",{c:K,sh:"heart"},{artist:"推し"}],["concert","es","TE AMO {artist}",{c:K}],["concert","pt","EU TE AMO {artist}",{c:K}],
+ ["love","en","WILL YOU MARRY ME? 💍",{c:K,sh:"heart",fx:"rainbow"},null,true],["love","en","I LOVE YOU {name}",{c:R,sh:"heart"},{name:"BABE"}],
+ ["love","es","TE AMO {name} ❤",{c:R,sh:"heart"},{name:"MI AMOR"}],["love","es","¿TE QUIERES CASAR CONMIGO?",{c:K,sh:"heart"},null,true],
+ ["love","pt","EU TE AMO {name}",{c:R,sh:"heart"},{name:"AMOR"}],["love","fr","JE T'AIME {name}",{c:K,sh:"heart"},{name:"MON CŒUR"}],
+ ["love","it","TI AMO {name}",{c:R,sh:"heart"},{name:"AMORE"}],["love","de","ICH LIEBE DICH",{c:R,sh:"heart"}],["love","ja","愛してる",{c:K,sh:"heart"}],
+ ["love","ko","사랑해 {name}",{c:K,sh:"heart"},{name:"자기"}],["love","zh","我爱你",{c:R,sh:"heart"}],["love","hi","प्यार है तुमसे",{c:R,sh:"heart"}],
+ ["love","ar","أحبك {name}",{c:R,sh:"heart"},{name:"حبيبتي"}],["love","tr","SENİ SEVİYORUM",{c:R,sh:"heart"}],["love","ru","Я ТЕБЯ ЛЮБЛЮ",{c:K,sh:"heart"}],
+ ["shop","en","OPEN",{c:G,m:"static",sh:"square"}],["shop","en","CLOSED",{c:R,m:"static",sh:"square"}],["shop","en","SALE {n}% OFF",{c:R,fx:"blink"}],
+ ["shop","en","FREE WIFI",{c:C,m:"static"}],["shop","en","NOW HIRING",{c:O}],["shop","en","BACK IN 5 MIN",{c:Y,m:"static"}],
+ ["shop","en","HAPPY HOUR 4–7 PM",{c:OR,fx:"wave"},null,true],["shop","es","ABIERTO",{c:G,m:"static",sh:"square"}],["shop","es","OFERTA {n}%",{c:R,fx:"blink"}],
+ ["shop","pt","ABERTO",{c:G,m:"static",sh:"square"}],["shop","pt","PROMOÇÃO {n}% OFF",{c:R,fx:"blink"}],["shop","fr","OUVERT",{c:G,m:"static",sh:"square"}],
+ ["shop","fr","SOLDES -{n}%",{c:R,fx:"blink"}],["shop","de","GEÖFFNET",{c:G,m:"static",sh:"square"}],["shop","ar","مفتوح",{c:G,m:"static",sh:"square"}],
+ ["shop","ar","تخفيضات {n}٪",{c:R,fx:"blink"}],["shop","ja","営業中",{c:G,m:"static"}],["shop","zh","营业中",{c:R,m:"static"}],
+ ["shop","id","BUKA",{c:G,m:"static"}],["shop","tr","AÇIK",{c:G,m:"static"}],
+ ["party","en","LET'S PARTY 🎉",{c:P,fx:"rainbow"}],["party","en","DJ {name} IN THE HOUSE",{c:P,fx:"wave"},{name:"NOVA"}],["party","en","VIP",{c:O,m:"static",sh:"star"}],
+ ["party","en","BIRTHDAY SQUAD",{c:K,fx:"rainbow"},null,true],["party","en","BRIDE TO BE 👰",{c:W,sh:"heart"},null,true],["party","es","¡FIESTA!",{c:Y,fx:"rainbow"}],
+ ["party","pt","BORA PRA FESTA!",{c:K,fx:"wave"}],["party","ko","파티 타임!",{c:P,fx:"rainbow"}],
+ ["holiday","en","MERRY CHRISTMAS 🎄",{c:R,sh:"star"}],["holiday","en","HAPPY NEW YEAR {year}!",{c:O,fx:"rainbow"}],["holiday","en","EID MUBARAK 🌙",{c:O,sh:"star"}],
+ ["holiday","en","RAMADAN KAREEM",{c:O,sh:"star"}],["holiday","en","HAPPY DIWALI 🪔",{c:O}],["holiday","en","HAPPY HANUKKAH",{c:B,sh:"star"}],
+ ["holiday","en","HAPPY HALLOWEEN 🎃",{c:OR,fx:"blink"},null,true],["holiday","en","HAPPY THANKSGIVING",{c:O}],["holiday","en","HAPPY EASTER",{c:K}],
+ ["holiday","es","¡FELIZ NAVIDAD!",{c:R,sh:"star"}],["holiday","es","¡FELIZ AÑO NUEVO!",{c:O,fx:"rainbow"}],["holiday","pt","FELIZ NATAL",{c:R,sh:"star"}],
+ ["holiday","fr","JOYEUX NOËL",{c:R,sh:"star"}],["holiday","de","FROHE WEIHNACHTEN",{c:G,sh:"star"}],["holiday","it","BUON NATALE",{c:R,sh:"star"}],
+ ["holiday","ar","عيد مبارك 🌙",{c:O,sh:"star"}],["holiday","ar","رمضان كريم",{c:O,sh:"star"}],["holiday","hi","शुभ दीपावली 🪔",{c:O}],
+ ["holiday","zh","新年快乐 🧧",{c:R}],["holiday","ja","あけましておめでとう",{c:R}],["holiday","ko","새해 복 많이 받으세요",{c:O}],
+ ["holiday","ru","С НОВЫМ ГОДОМ!",{c:C,fx:"rainbow"}],["holiday","tr","İYİ BAYRAMLAR",{c:O,sh:"star"}],["holiday","id","SELAMAT IDUL FITRI",{c:G,sh:"star"}],
+ ["celebrate","en","CONGRATS GRAD {year} 🎓",{c:O,fx:"wave"}],["celebrate","en","JUST MARRIED 💍",{c:W,sh:"heart"}],["celebrate","en","CONGRATULATIONS!",{c:Y,fx:"rainbow"}],
+ ["celebrate","en","IT'S A BOY! 💙",{c:B,sh:"heart"}],["celebrate","en","IT'S A GIRL! 💗",{c:K,sh:"heart"}],["celebrate","en","WELCOME TO THE TEAM {name}",{c:C},null,true],
+ ["celebrate","es","¡FELICIDADES!",{c:Y,fx:"rainbow"}],["celebrate","pt","PARABÉNS!",{c:G,fx:"rainbow"}],["celebrate","fr","FÉLICITATIONS !",{c:O}],
+ ["celebrate","ar","ألف مبروك",{c:O,fx:"rainbow"}],["celebrate","ja","おめでとう！",{c:K}],
+ ["road","en","THANK YOU 🙏",{c:G,m:"static"}],["road","en","SORRY!",{c:O,m:"static"}],["road","en","BABY ON BOARD",{c:Y}],["road","en","KEEP DISTANCE",{c:R,fx:"blink"}],
+ ["road","en","JUST MARRIED",{c:W,sh:"heart"}],["road","es","GRACIAS",{c:G,m:"static"}],["road","pt","OBRIGADO",{c:G,m:"static"}],["road","fr","MERCI",{c:G,m:"static"}],
+ ["road","de","DANKE",{c:G,m:"static"}],["road","ar","شكراً",{c:G,m:"static"}],["road","ja","ありがとう",{c:G,m:"static"}],
+ ["sos","en","HELP!",{c:R,fx:"blink",m:"static",sh:"square"}],["sos","en","SOS",{c:R,fx:"blink",m:"static",sh:"square"}],["sos","en","NEED A RIDE",{c:Y}],
+ ["sos","en","CALL AN AMBULANCE",{c:R,fx:"blink"}],["sos","es","¡AYUDA!",{c:R,fx:"blink",m:"static"}],["sos","pt","SOCORRO!",{c:R,fx:"blink",m:"static"}],
+ ["sos","fr","AU SECOURS !",{c:R,fx:"blink"}],["sos","ar","النجدة!",{c:R,fx:"blink",m:"static"}],["sos","ja","助けて！",{c:R,fx:"blink",m:"static"}],
+].map((a,i)=>({id:i,cat:a[0],lang:a[1],t:a[2],s:a[3],d:a[4]||{},pro:!!a[5]}));
+const byText=t=>T.find(x=>x.t===t);
+const FEATURED=["GO {team} GO!","HAPPY BIRTHDAY {name}! 🎂","WELCOME HOME {name}! ✈","WILL YOU MARRY ME? 💍","¡FELIZ CUMPLEAÑOS {name}!","عيد مبارك 🌙"].map(byText);
+const TRENDING=["GOOOOAL!!! ⚽","{artist} 사랑해 💜","OPEN","ENCORE! ENCORE!","お誕生日おめでとう {name}","SALE {n}% OFF","PARABÉNS {name}! 🎉","I ❤ {artist}","新年快乐 🧧","JUST MARRIED 💍"].map(byText);
+const TXT_COLORS=[R,OR,O,Y,G,C,B,P,K,W];
+const BG_COLORS=["#000000","#0b0b2e","#2a0000","#00210f","#1c1c1c","#2b0030"];
+
+// ================= STATE =================
+const BASE={text:"HELLO WORLD 👋",color:R,bg:"#000000",rows:28,speed:14,gap:20,shape:"circle",mode:"scroll",dir:"auto",fx:"none",glow:true,offDots:true,pro:false,tplId:null};
+const nav2=(navigator.language||"en").slice(0,2);
+let ui={lang:I18N[nav2]?nav2:"en",tplLang:LANGS[nav2]?nav2:"en",pro:false,haptics:true,lib:"fav"};
+let cur={...BASE}, favs=[], recents=[];
+try{ Object.assign(ui,JSON.parse(localStorage.getItem("ledapp_ui")||"{}")); Object.assign(cur,JSON.parse(localStorage.getItem("ledapp_cur")||"{}"));
+  favs=JSON.parse(localStorage.getItem("ledapp_favs")||"[]"); recents=JSON.parse(localStorage.getItem("ledapp_rec")||"[]"); }catch(e){}
+const save=()=>{ try{ localStorage.setItem("ledapp_ui",JSON.stringify(ui)); localStorage.setItem("ledapp_cur",JSON.stringify(cur));
+  localStorage.setItem("ledapp_favs",JSON.stringify(favs)); localStorage.setItem("ledapp_rec",JSON.stringify(recents)); }catch(e){} };
+const L=(k,v)=>{ let s=(I18N[ui.lang]&&I18N[ui.lang][k])||I18N.en[k]||k; if(v) for(const x in v) s=s.replace("{"+x+"}",v[x]); return s; };
+const $=id=>document.getElementById(id);
+const tap=()=>{ if(!ui.haptics) return; try{ if(NATIVE) NATIVE.haptic(); else if(navigator.vibrate) navigator.vibrate(8); }catch(e){} };
+let toastT; const toast=m=>{ const t=$("toast"); t.textContent=m; t.classList.add("on"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("on"),2000); };
+
+// ================= LED ENGINE =================
+const RTL_RE=/[֐-ࣿיִ-﷿ﹰ-﻿]/, LTR_RE=/[A-Za-zÀ-ɏͰ-ԯऀ-ॿ぀-ヿ㐀-鿿가-힯]/;
+const isRTL=s=>{ for(const ch of s){ if(RTL_RE.test(ch)) return true; if(LTR_RE.test(ch)) return false; } return false; };
+const FONT=`"Rubik","Cairo","Noto Sans JP","Noto Sans KR","Noto Sans SC","Noto Sans Devanagari","Segoe UI",Tahoma,sans-serif`;
+const tc=document.createElement("canvas"), tctx=tc.getContext("2d",{willReadFrequently:true});
+function textMask(text,rows){
+  const t=(String(text).trim()||" ").replace(/\s+/g," "), fs=Math.round(rows*.76), font=`900 ${fs}px ${FONT}`, rtl=isRTL(t);
+  tctx.font=font; tctx.direction=rtl?"rtl":"ltr";
+  const w=Math.max(1,Math.ceil(tctx.measureText(t).width)+4);
+  tc.width=w; tc.height=rows; tctx.font=font; tctx.direction=rtl?"rtl":"ltr"; tctx.textAlign="center"; tctx.textBaseline="middle"; tctx.fillStyle="#fff";
+  tctx.clearRect(0,0,w,rows); tctx.fillText(t,w/2,rows/2+rows*.04);
+  const d=tctx.getImageData(0,0,w,rows).data, m=new Uint8Array(w*rows);
+  for(let i=0;i<w*rows;i++) m[i]=d[i*4+3]>105?1:0;
+  let a=0,b=w-1; const empty=x=>{ for(let y=0;y<rows;y++) if(m[y*w+x]) return false; return true; };
+  while(a<b&&empty(a))a++; while(b>a&&empty(b))b--;
+  const nw=b-a+3, out=new Uint8Array(nw*rows);
+  for(let y=0;y<rows;y++) for(let x=a;x<=b;x++) out[y*nw+x-a+1]=m[y*w+x];
+  return {m:out,w:nw,rtl};
+}
+const SPR=new Map(), S=48;
+function shapePath(c,shape,r){
+  const m=S/2; c.beginPath();
+  if(shape==="square") c.rect(m-r,m-r,2*r,2*r);
+  else if(shape==="star"){ for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?r*.45:r;c.lineTo(m+rr*Math.cos(a),m+rr*Math.sin(a));} c.closePath(); }
+  else if(shape==="heart"){ const s=r/1.05; c.moveTo(m,m+s*.95); c.bezierCurveTo(m-s*1.6,m-s*.1,m-s*.7,m-s*1.25,m,m-s*.45); c.bezierCurveTo(m+s*.7,m-s*1.25,m+s*1.6,m-s*.1,m,m+s*.95); }
+  else c.arc(m,m,r,0,Math.PI*2);
+}
+function sprite(color,lit,o){
+  const key=color+lit+o.shape+o.gap+o.glow; let c=SPR.get(key); if(c) return c;
+  c=document.createElement("canvas"); c.width=c.height=S; const g=c.getContext("2d");
+  const r=(S/2)*(1-o.gap/100)*(lit&&o.glow?.86:.92);
+  g.fillStyle=color; if(lit&&o.glow){ g.shadowColor=color; g.shadowBlur=S*.22; }
+  shapePath(g,o.shape,r); g.fill();
+  if(lit){ g.shadowBlur=0; g.globalAlpha=.35; g.fillStyle="#fff"; shapePath(g,o.shape,r*.45); g.fill(); }
+  SPR.set(key,c); return c;
+}
+const hexA=(h,a)=>{ const n=parseInt(h.slice(1),16); return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`; };
+const HUES=[...Array(24)].map((_,i)=>`hsl(${i*15},100%,58%)`);
+function drawLED(ctx,W,H,o,mk,pos,t){
+  const rows=o.rows, dot=H/rows, cols=Math.ceil(W/dot);
+  ctx.fillStyle=o.bg; ctx.fillRect(0,0,W,H);
+  const on=sprite(o.color,true,o), off=o.offDots?sprite(hexA(o.color,.09),false,o):null;
+  const vis=o.fx!=="blink"||Math.floor(t/420)%2===0, p=Math.round(pos), sh=Math.floor(t/70), amp=o.fx==="wave"?Math.max(1,Math.round(rows*.09)):0;
+  for(let c=0;c<cols;c++){
+    const sx=c-p, inT=vis&&sx>=0&&sx<mk.w, x=c*dot, spr=o.fx==="rainbow"?sprite(HUES[((c+sh)%24+24)%24],true,o):on;
+    const dy=amp?Math.round(Math.sin(c*.35+t*.006)*amp):0;
+    for(let r=0;r<rows;r++){ const rr=r-dy;
+      if(inT&&rr>=0&&rr<rows&&mk.m[rr*mk.w+sx]) ctx.drawImage(spr,x,r*dot,dot,dot);
+      else if(off) ctx.drawImage(off,x,r*dot,dot,dot); }
+  }
+}
+// animated player bound to a canvas + options object
+class Player{
+  constructor(cv,o){ this.cv=cv; this.ctx=cv.getContext("2d"); this.o=o; this.mk=null; this.key=""; this.pos=0; this.paused=false; }
+  cols(){ return Math.ceil(this.cv.width/(this.cv.height/this.o.rows)); }
+  right(){ return this.o.dir==="right"||(this.o.dir!=="left"&&this.mk&&this.mk.rtl); }
+  reset(){ if(this.mk) this.pos=this.right()?-this.mk.w:this.cols(); }
+  step(dt,t){
+    const cv=this.cv, cw=cv.clientWidth, ch=cv.clientHeight; if(!cw||!ch) return;
+    const dpr=Math.min(2,devicePixelRatio||1), w=Math.round(cw*dpr), h=Math.round(ch*dpr);
+    if(cv.width!==w||cv.height!==h){ cv.width=w; cv.height=h; this.reset(); }
+    const k=this.o.text+"|"+this.o.rows; if(k!==this.key){ this.key=k; this.mk=textMask(this.o.text,this.o.rows); this.reset(); }
+    const o=this.o, cols=this.cols();
+    if(o.mode==="scroll"||this.mk.w>cols){
+      if(!this.paused){ const r=this.right(); this.pos+=(r?1:-1)*o.speed*dt; if(r&&this.pos>cols) this.pos=-this.mk.w; if(!r&&this.pos<-this.mk.w) this.pos=cols; }
+    } else this.pos=Math.floor((cols-this.mk.w)/2);
+    drawLED(this.ctx,w,h,o,this.mk,this.pos,t);
+  }
+}
+const players=new Set();
+let last=performance.now();
+function loop(t){ const dt=Math.min(.1,(t-last)/1000); last=t; players.forEach(p=>p.step(dt,t)); requestAnimationFrame(loop); }
+
+// static thumbnail
+function thumb(canvas,o,text){
+  const g=canvas.getContext("2d"), rows=18, mk=textMask(text,rows), cols=Math.ceil(canvas.width/(canvas.height/rows));
+  const p=mk.w<=cols?Math.floor((cols-mk.w)/2):(mk.rtl?cols-mk.w-1:1);
+  drawLED(g,canvas.width,canvas.height,{...o,rows,gap:18,glow:true,offDots:true,fx:o.fx==="blink"?"none":o.fx},mk,p,0);
+}
+let thumbQ=[]; function queueThumb(c,o,t){ thumbQ.push([c,o,t]); if(thumbQ.length===1) requestAnimationFrame(runThumbs); }
+function runThumbs(){ thumbQ.splice(0,10).forEach(a=>thumb(...a)); if(thumbQ.length) requestAnimationFrame(runThumbs); }
+
+// ================= HELPERS =================
+const fill=(t,vals)=>t.replace(/\{(\w+)\}/g,(_,k)=>(vals&&vals[k])??DEF[k]??"");
+const fieldsOf=t=>[...new Set([...t.matchAll(/\{(\w+)\}/g)].map(x=>x[1]))];
+const styleOf=tp=>({color:tp.s.c||R,bg:tp.s.bg||"#000000",shape:tp.s.sh||"circle",fx:tp.s.fx||"none",speed:tp.s.sp||14,mode:tp.s.m||"scroll"});
+const snapshot=()=>({text:cur.text,color:cur.color,bg:cur.bg,rows:cur.rows,speed:cur.speed,gap:cur.gap,shape:cur.shape,mode:cur.mode,dir:cur.dir,fx:cur.fx,glow:cur.glow,offDots:cur.offDots,pro:cur.pro});
+
+function card(tp){
+  const b=document.createElement("button"); b.className="card";
+  const c=document.createElement("canvas"); c.width=300; c.height=102; b.appendChild(c);
+  const txt=fill(tp.t,tp.d);
+  const t=document.createElement("div"); t.className="t"; t.dir="auto"; t.textContent=txt; b.appendChild(t);
+  const k=document.createElement("div"); k.className="k"; k.innerHTML=`<span>${CATICON[tp.cat]} ${L("c_"+tp.cat)}</span><span>${LANGS[tp.lang]}</span>`; b.appendChild(k);
+  if(tp.pro){ const p=document.createElement("span"); p.className="pro"; p.textContent="PRO"; b.appendChild(p); }
+  b.onclick=()=>{ tap(); openTemplate(tp); };
+  queueThumb(c,{...BASE,...styleOf(tp)},txt);
+  return b;
+}
+
+// ================= NAVIGATION =================
+const ROOTS=["home","library"]; let stack=["home"];
+function render(){
+  const top=stack[stack.length-1];
+  document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+top));
+  $("tabbar").classList.toggle("hide",!ROOTS.includes(top));
+  document.querySelectorAll("#tabbar .tb").forEach(b=>b.classList.toggle("on",b.dataset.tab===top));
+  $("cta").classList.toggle("on",top==="editor");
+  if(top==="library") renderLibrary();
+  if(top==="editor") updateCTA();
+  $("v-"+top).scrollTop=$("v-"+top).dataset.keep?$("v-"+top).scrollTop:0;
+}
+function go(v){ stack.push(v); history.pushState({n:stack.length},""); render(); }
+function back(){ history.back(); }
+function setRoot(v){ stack=[v]; render(); }
+let modal=null; // "show" | "pw"
+function openModal(m){ modal=m; history.pushState({m},""); }
+addEventListener("popstate",()=>{
+  if(modal==="show"){ closeShow(); modal=null; return; }
+  if(modal==="pw"){ $("pw").classList.remove("on"); modal=null; return; }
+  if(stack.length>1){ stack.pop(); render(); }
+});
+document.querySelectorAll(".back").forEach(b=>b.onclick=()=>{ tap(); back(); });
+document.querySelectorAll("#tabbar .tb").forEach(b=>b.onclick=()=>{ tap(); setRoot(b.dataset.tab); });
+
+// ================= HOME =================
+const featPlayers=[];
+function renderHome(){
+  // featured (live animated)
+  featPlayers.forEach(p=>players.delete(p)); featPlayers.length=0;
+  const f=$("featured"); f.innerHTML="";
+  FEATURED.forEach(tp=>{
+    const b=document.createElement("button"); b.className="feat";
+    const c=document.createElement("canvas"); b.appendChild(c);
+    const txt=fill(tp.t,tp.d);
+    b.insertAdjacentHTML("beforeend",`<div class="row"><div style="min-width:0"><div class="t" dir="auto"></div><div class="k">${CATICON[tp.cat]} ${L("c_"+tp.cat)} · ${LANGS[tp.lang]}</div></div><span class="use">${tp.pro?"👑 PRO":L("showShort")}</span></div>`);
+    b.querySelector(".t").textContent=txt;
+    b.onclick=()=>{ tap(); openTemplate(tp); };
+    f.appendChild(b);
+    const p=new Player(c,{...BASE,...styleOf(tp),text:txt,rows:22,speed:Math.min(16,styleOf(tp).speed)}); featPlayers.push(p); players.add(p);
+  });
+  // categories
+  const cg=$("cats"); cg.innerHTML="";
+  CATS.forEach(([k,e,tint])=>{ const b=document.createElement("button"); b.className="cat"; b.style.setProperty("--tint",tint);
+    b.innerHTML=`<span class="e">${e}</span><span>${L("c_"+k)}</span>`; b.onclick=()=>{ tap(); openBrowse({cat:k}); }; cg.appendChild(b); });
+  const all=document.createElement("button"); all.className="cat"; all.style.setProperty("--tint","#ffffff");
+  all.innerHTML=`<span class="e">🌍</span><span>${L("c_all")}</span>`; all.onclick=()=>{ tap(); openBrowse({}); }; cg.appendChild(all);
+  // popular in language
+  $("popTitle").textContent=L("popularIn",{l:LANGS[ui.tplLang]});
+  const pop=$("popular"); pop.innerHTML="";
+  T.filter(t=>t.lang===ui.tplLang).slice(0,12).forEach(tp=>pop.appendChild(card(tp)));
+  $("popAll").onclick=()=>{ tap(); openBrowse({lang:ui.tplLang}); };
+  const tr=$("trending"); tr.innerHTML=""; TRENDING.forEach(tp=>tr.appendChild(card(tp)));
+}
+$("quickForm").onsubmit=e=>{ e.preventDefault(); const v=$("quickIn").value.trim(); if(!v){ $("quickIn").focus(); return; }
+  tap(); Object.assign(cur,{...BASE,glow:cur.glow,offDots:cur.offDots,text:v}); edTpl=null; save(); enterShow(); };
+$("homeSearch").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); openBrowse({q:e.target.value}); e.target.blur(); } });
+$("homeSearch").addEventListener("search",e=>{ if(e.target.value) openBrowse({q:e.target.value}); });
+$("gear").onclick=()=>{ tap(); go("settings"); };
+$("proPill").onclick=()=>{ tap(); openPaywall(); };
+$("createBtn").onclick=()=>{ tap(); Object.assign(cur,{...BASE,glow:cur.glow,offDots:cur.offDots,text:""}); edTpl=null; openEditor(true); };
+
+// ================= BROWSE =================
+let br={cat:"all",lang:"all",q:""};
+function openBrowse(o){ br={cat:o.cat||"all",lang:o.lang||"all",q:o.q||""}; $("browseSearch").value=br.q; renderBrowse(); go("browse"); }
+function renderBrowse(){
+  $("browseTitle").textContent = br.cat==="all" ? `🌍 ${L("c_all")}` : `${CATICON[br.cat]} ${L("c_"+br.cat)}`;
+  const bc=$("browseCats"); bc.innerHTML="";
+  [["all","🌍"],...CATS].forEach(([k,e])=>{ const b=document.createElement("button"); b.className="chip"+(br.cat===k?" on":""); b.textContent=`${e} ${L("c_"+k)}`;
+    b.onclick=()=>{ tap(); br.cat=k; renderBrowse(); }; bc.appendChild(b); });
+  const bl=$("browseLangs"); bl.innerHTML="";
+  [["all",L("allLangs")],...Object.entries(LANGS)].forEach(([k,n])=>{ const b=document.createElement("button"); b.className="chip"+(br.lang===k?" on":""); b.textContent=n;
+    b.onclick=()=>{ tap(); br.lang=k; renderBrowse(); }; bl.appendChild(b); });
+  const q=br.q.trim().toLowerCase();
+  const list=T.filter(tp=>(br.cat==="all"||tp.cat===br.cat)&&(br.lang==="all"||tp.lang===br.lang)&&
+    (!q||fill(tp.t,tp.d).toLowerCase().includes(q)||L("c_"+tp.cat).toLowerCase().includes(q)||LANGS[tp.lang].toLowerCase().includes(q)||tp.cat.includes(q)));
+  $("browseCount").textContent=`${list.length} ${L("templates")}`;
+  const g=$("browseGrid"); g.innerHTML=""; thumbQ=[];
+  if(!list.length) g.innerHTML=`<div class="empty" style="grid-column:1/-1"><span class="e">🔍</span>—</div>`;
+  list.forEach(tp=>g.appendChild(card(tp)));
+}
+$("browseSearch").oninput=e=>{ br.q=e.target.value; renderBrowse(); };
+
+// ================= EDITOR =================
+let edTpl=null, edVals={}, edPlayer=null;
+function openTemplate(tp){
+  edTpl=tp; edVals={...tp.d};
+  Object.assign(cur,{...BASE,glow:cur.glow,offDots:cur.offDots},styleOf(tp),{text:fill(tp.t,edVals),pro:tp.pro,tplId:tp.id});
+  save(); openEditor(false);
+}
+function openEditor(focusText){
+  renderFields(); syncControls(); go("editor"); edPlayer.reset();
+  if(focusText) setTimeout(()=>$("edText").focus(),300);
+}
+function renderFields(){
+  const box=$("fields"); box.innerHTML="";
+  const f=edTpl?fieldsOf(edTpl.t):[];
+  const useFields=f.length>0;
+  $("freeText").style.display=useFields?"none":"block";
+  $("editFull").style.display=useFields?"block":"none";
+  f.forEach(k=>{
+    const d=document.createElement("div"); d.className="field";
+    d.innerHTML=`<div class="lbl"><span>${L("f_"+k)}</span></div>`;
+    const i=document.createElement("input"); i.dir="auto"; i.maxLength=40; i.value=edVals[k]??DEF[k];
+    i.oninput=()=>{ edVals[k]=i.value; cur.text=fill(edTpl.t,edVals); $("edText").value=cur.text; updDir(); save(); };
+    d.appendChild(i); box.appendChild(d);
+  });
+  $("edText").value=cur.text; updDir();
+}
+$("editFull").onclick=()=>{ tap(); edTpl=null; renderFields(); $("edText").focus(); };
+const updDir=()=>{ $("dirTag").textContent=L(isRTL(cur.text)?"rtl":"ltr"); };
+$("edText").oninput=e=>{ cur.text=e.target.value; updDir(); save(); };
+$("prevBox").onclick=()=>{ tap(); startShow(); };
+
+// style tabs
+$("stabs").querySelectorAll("button").forEach(b=>b.onclick=()=>{ tap();
+  $("stabs").querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));
+  document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("on",p.id==="p-"+b.dataset.p)); });
+function swatches(id,list,key){
+  const el=$(id); el.innerHTML="";
+  list.forEach(c=>{ const b=document.createElement("button"); b.className="sw"+(cur[key]===c?" on":""); b.style.background=c;
+    if(c==="#000000") b.style.boxShadow="inset 0 0 0 1px #444";
+    b.onclick=()=>{ tap(); cur[key]=c; save(); swatches(id,list,key); }; el.appendChild(b); });
+  const cw=document.createElement("label"); cw.className="sw custom"+(list.includes(cur[key])?"":" on");
+  const i=document.createElement("input"); i.type="color"; i.value=cur[key]; i.oninput=()=>{ cur[key]=i.value; save(); el.querySelectorAll(".sw").forEach(s=>s.classList.remove("on")); cw.classList.add("on"); };
+  cw.appendChild(i); el.appendChild(cw);
+}
+function opts(id,key,after){ $(id).querySelectorAll("button").forEach(b=>{ b.classList.toggle("on",b.dataset.v===cur[key]);
+  b.onclick=()=>{ tap(); cur[key]=b.dataset.v; save(); opts(id,key,after); after&&after(); }; }); }
+function range(id,key,fmt){ const el=$(id); el.value=cur[key]; $(id+"V").textContent=fmt(cur[key]); el.oninput=()=>{ cur[key]=+el.value; $(id+"V").textContent=fmt(cur[key]); save(); }; }
+function syncControls(){
+  swatches("swText",TXT_COLORS,"color"); swatches("swBg",BG_COLORS,"bg");
+  opts("fxOpts","fx"); opts("shapeOpts","shape"); opts("modeSeg","mode",()=>edPlayer.reset()); opts("dirSeg","dir",()=>edPlayer.reset());
+  range("rows","rows",v=>v); range("gap","gap",v=>v+"%"); range("speed","speed",v=>v);
+  $("glow").checked=cur.glow; $("offDots").checked=cur.offDots;
+  updateFav();
+}
+$("glow").onchange=e=>{ cur.glow=e.target.checked; save(); };
+$("offDots").onchange=e=>{ cur.offDots=e.target.checked; save(); };
+function updateCTA(){ const locked=cur.pro&&!ui.pro; const b=$("showBtn"); b.textContent=L(locked?"unlock":"show"); b.classList.toggle("locked",locked); }
+$("showBtn").onclick=()=>{ tap(); startShow(); };
+
+// favorites / share
+const sameBanner=(a,b)=>a.text===b.text&&a.color===b.color&&a.fx===b.fx&&a.shape===b.shape;
+function updateFav(){ const on=favs.some(f=>sameBanner(f,cur)); $("favBtn").textContent=on?"♥":"♡"; $("favBtn").classList.toggle("on",on); }
+$("favBtn").onclick=()=>{ tap(); const i=favs.findIndex(f=>sameBanner(f,cur));
+  if(i>=0){ favs.splice(i,1); toast(L("removed")); } else { favs.unshift(snapshot()); toast(L("saved")); } save(); updateFav(); };
+const b64e=s=>btoa(unescape(encodeURIComponent(s))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+const b64d=s=>decodeURIComponent(escape(atob(s.replace(/-/g,"+").replace(/_/g,"/"))));
+$("shareBtn").onclick=async()=>{ tap();
+  if(NATIVE){ NATIVE.share(cur.text+"\n\n"+L("shareMsg")+" "+PLAY_URL); return; }
+  const url=location.href.split("#")[0]+"#b="+b64e(JSON.stringify(snapshot()));
+  try{ if(navigator.share){ await navigator.share({title:"LED Banner",text:cur.text,url}); return; } }catch(e){ if(e.name==="AbortError") return; }
+  try{ await navigator.clipboard.writeText(url); }catch(e){ const ta=document.createElement("textarea"); ta.value=url; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy");}catch(_){} ta.remove(); }
+  toast(L("copied"));
+};
+
+// ================= SHOW MODE =================
+const show=$("show"); let showPlayer=null, wake=null, uiTimer=null, locked=false;
+function startShow(){ if(cur.pro&&!ui.pro){ openPaywall(); return; } enterShow(); }
+async function enterShow(){
+  addRecent(); show.classList.add("on"); $("showTitle").textContent=cur.text; layoutShow();
+  showPlayer.paused=false; $("sPlay").textContent="⏸"; locked=false; $("sLock").textContent="🔒"; showPlayer.reset();
+  openModal("show"); flashUI();
+  if(NATIVE){ NATIVE.show(true); } else {
+    try{ if(show.requestFullscreen){ await show.requestFullscreen({navigationUI:"hide"}); await screen.orientation?.lock?.("landscape"); } }catch(e){}
+    try{ wake=await navigator.wakeLock?.request("screen"); }catch(e){}
+  }
+  setTimeout(()=>{ layoutShow(); showPlayer.reset(); },350);
+}
+function closeShow(){
+  show.classList.remove("on","rot","ui"); show.style.width=show.style.height="";
+  if(NATIVE) NATIVE.show(false);
+  try{ screen.orientation?.unlock?.(); }catch(e){} try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(e){}
+  try{ wake&&wake.release(); }catch(e){} wake=null;
+  if(stack[stack.length-1]==="editor"){ updateFav(); } renderLibraryIfOpen();
+}
+function layoutShow(){ if(!show.classList.contains("on")) return; const W=innerWidth,H=innerHeight,rot=!NATIVE&&H>W;
+  show.classList.toggle("rot",rot); show.style.width=(rot?H:W)+"px"; show.style.height=(rot?W:H)+"px"; }
+function flashUI(){ show.classList.add("ui"); clearTimeout(uiTimer); uiTimer=setTimeout(()=>show.classList.remove("ui"),3000); }
+function hint(m){ const h=$("lockHint"); h.textContent=m; h.classList.add("on"); clearTimeout(h._t); h._t=setTimeout(()=>h.classList.remove("on"),1400); }
+show.addEventListener("click",e=>{ if(e.target.closest(".ovb")) return; if(locked){ hint(L("locked")); return; }
+  if(show.classList.contains("ui")){ show.classList.remove("ui"); } else flashUI(); });
+show.addEventListener("dblclick",()=>{ if(locked){ locked=false; $("sLock").textContent="🔒"; hint(L("unlocked")); flashUI(); } });
+$("sClose").onclick=()=>{ tap(); history.back(); };
+$("sPlay").onclick=()=>{ tap(); showPlayer.paused=!showPlayer.paused; $("sPlay").textContent=showPlayer.paused?"▶":"⏸"; flashUI(); };
+$("sSlow").onclick=()=>{ tap(); cur.speed=Math.max(2,cur.speed-3); save(); flashUI(); };
+$("sFast").onclick=()=>{ tap(); cur.speed=Math.min(45,cur.speed+3); save(); flashUI(); };
+$("sDir").onclick=()=>{ tap(); cur.dir=showPlayer.right()?"left":"right"; save(); showPlayer.reset(); flashUI(); };
+$("sLock").onclick=()=>{ tap(); locked=true; show.classList.remove("ui"); hint(L("locked")); };
+addEventListener("resize",layoutShow);
+document.addEventListener("fullscreenchange",()=>{ if(!document.fullscreenElement&&modal==="show") history.back(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&modal==="show") history.back(); });
+document.addEventListener("visibilitychange",async()=>{ if(document.visibilityState==="visible"&&modal==="show"&&!wake){ try{ wake=await navigator.wakeLock?.request("screen"); }catch(e){} } });
+
+// ================= PAYWALL =================
+function openPaywall(){ if(NATIVE){ try{ const p=NATIVE.proPrice(); if(p) $("pwPrice").textContent=p; }catch(e){} } $("pw").classList.add("on"); openModal("pw"); }
+$("pw").onclick=e=>{ if(e.target.id==="pw") history.back(); };
+$("laterBtn").onclick=()=>{ tap(); history.back(); };
+$("buyBtn").onclick=()=>{ tap(); if(NATIVE){ NATIVE.buyPro(); return; } ui.pro=true; save(); history.back(); toast(L("proOn")); updatePro(); updateCTA(); };
+function updatePro(){ const p=$("proPill"); p.classList.toggle("owned",ui.pro); p.textContent=ui.pro?"👑 PRO ✓":"👑 PRO"; }
+
+// ================= LIBRARY =================
+function addRecent(){ if(!cur.text.trim()) return; const s=snapshot(); recents=[s,...recents.filter(r=>!sameBanner(r,s))].slice(0,20); save(); }
+function renderLibraryIfOpen(){ if(stack[stack.length-1]==="library") renderLibrary(); }
+function renderLibrary(){
+  $("libSeg").querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.v===ui.lib));
+  const arr=ui.lib==="fav"?favs:recents, box=$("libList"); box.innerHTML="";
+  if(!arr.length){ box.innerHTML=`<div class="empty"><span class="e">${ui.lib==="fav"?"♡":"🕘"}</span>${L(ui.lib==="fav"?"emptyFav":"emptyRecent")}</div>`; return; }
+  const list=document.createElement("div"); list.className="list";
+  arr.forEach((it,i)=>{
+    const row=document.createElement("div"); row.className="li"; row.style.cursor="pointer";
+    const c=document.createElement("canvas"); c.width=192; c.height=66; row.appendChild(c);
+    const t=document.createElement("span"); t.className="t"; t.dir="auto"; t.textContent=it.text; row.appendChild(t);
+    const x=document.createElement("button"); x.className="x"; x.textContent="✕";
+    x.onclick=e=>{ e.stopPropagation(); tap(); arr.splice(i,1); save(); renderLibrary(); }; row.appendChild(x);
+    row.onclick=()=>{ tap(); Object.assign(cur,BASE,it); edTpl=null; save(); openEditor(false); };
+    list.appendChild(row); queueThumb(c,{...BASE,...it},it.text);
+  });
+  box.appendChild(list);
+}
+$("libSeg").querySelectorAll("button").forEach(b=>b.onclick=()=>{ tap(); ui.lib=b.dataset.v; save(); renderLibrary(); });
+
+// ================= SETTINGS =================
+$("tplLang").innerHTML=Object.entries(LANGS).map(([k,v])=>`<option value="${k}">${v}</option>`).join("");
+$("appLang").onchange=e=>{ ui.lang=e.target.value; save(); applyLang(); };
+$("tplLang").onchange=e=>{ ui.tplLang=e.target.value; save(); renderHome(); };
+$("haptics").onchange=e=>{ ui.haptics=e.target.checked; save(); };
+$("setPro").onclick=()=>{ tap(); openPaywall(); };
+$("restore").onclick=()=>{ tap(); if(NATIVE) NATIVE.restore(); else toast(L("restored")); };
+$("rateBtn").onclick=()=>{ tap(); if(NATIVE) NATIVE.rate(); else window.open(PLAY_URL,"_blank"); };
+$("privBtn").onclick=()=>{ tap(); go("privacy"); };
+// events coming from the Android app
+window.onNative=(ev,val)=>{
+  if(ev==="pro"){ const was=ui.pro; ui.pro=!!val; save(); updatePro(); updateCTA(); if(ui.pro&&!was){ toast(L("proOn")); if(modal==="pw") history.back(); } }
+  else if(ev==="price"){ if(val) $("pwPrice").textContent=val; }
+  else if(ev==="purchase"){ if(val==="pending") toast(L("pending")); else if(val==="error"||val==="unavailable") toast(L("storeErr")); }
+  else if(ev==="restore"){ toast(L(val?"proOn":"noPurchase")); }
+};
+
+function applyLang(){
+  document.documentElement.lang=ui.lang; document.documentElement.dir=ui.lang==="ar"?"rtl":"ltr";
+  document.querySelectorAll("[data-i18n]").forEach(el=>el.textContent=L(el.dataset.i18n));
+  document.querySelectorAll("[data-i18n-ph]").forEach(el=>el.placeholder=L(el.dataset.i18nPh));
+  $("appLang").value=ui.lang; $("tplLang").value=ui.tplLang; $("haptics").checked=ui.haptics;
+  if(NATIVE) $("pw").querySelector(".fine").textContent=L("fineNative");
+  renderHome(); updatePro(); updateCTA(); updDir();
+  if(stack.includes("browse")) renderBrowse();
+  if(stack.includes("editor")) renderFields();
+  renderLibraryIfOpen();
+}
+
+// ================= INIT =================
+if(NATIVE){ try{ ui.pro=!!NATIVE.isPro(); }catch(e){} }
+edPlayer=new Player($("edCv"),cur); players.add(edPlayer);
+showPlayer=new Player($("showCv"),cur); players.add(showPlayer);
+applyLang();
+history.replaceState({n:1},"");
+// open shared link: #b=...
+try{ const m=location.hash.match(/#b=([\w-]+)/); if(m){ const s=JSON.parse(b64d(m[1])); Object.assign(cur,BASE,s); edTpl=null; save();
+  history.replaceState({n:1},"",location.href.split("#")[0]); openEditor(false); } }catch(e){}
+requestAnimationFrame(t=>{ last=t; loop(t); });
+if(document.fonts){ const redo=()=>{ players.forEach(p=>p.key=""); renderHome(); if(stack.includes("browse")) renderBrowse(); };
+  document.fonts.ready.then(redo); setTimeout(redo,2500); }
+})();
+</script>
+</body>
+</html>
