@@ -44,6 +44,18 @@ keyPassword=...
 ```
 Without it the `.aab` is unsigned, which Play Console rejects, and the build prints a warning.
 
+### Builds from GitHub, straight to your Desktop
+Every push to `main` makes GitHub build `LedBanner-test.apk` and `LedBanner-release-<versionName>.aab`
+(`.github/workflows/build.yml`) and publish them on the **latest** release:
+https://github.com/shahidothman06-tech/Led-Banner/releases/tag/latest
+
+To have them land on your Desktop automatically, run `tools/desktop-sync.ps1` once on your PC
+(right-click → **Run with PowerShell**). It downloads the newest files now, then checks every 15 minutes
+in the background. Your own Android Studio build is kept whenever it is newer. To stop it:
+```powershell
+Unregister-ScheduledTask -TaskName 'LED Banner Desktop Sync' -Confirm:$false
+```
+
 > If Android Studio offers to upgrade to AGP 9, Kotlin is built in there: remove the
 > `org.jetbrains.kotlin.android` plugin lines from both build files, or say "no" to the upgrade for now.
 
